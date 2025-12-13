@@ -1,6 +1,4 @@
 {
-  "name": "dementia-prevention-quiz",
-  "version": "1.0.0",
   "description": "치매예방 두뇌 게임 - D-ID 아바타 연동",
   "dependencies": {
     "node-fetch": "^2.6.7"
