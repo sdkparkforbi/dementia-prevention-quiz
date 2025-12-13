@@ -18,7 +18,7 @@ exports.handler = async (event, context) => {
     const DID_API_KEY = process.env.DID_API_KEY;
     const KNOWLEDGE_ID = process.env.KNOWLEDGE_ID;
     const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-    const GITHUB_USERNAME = process.env.GITHUB_USERNAME || 'sdkparkforbi';
+    const GITHUB_USERNAME = process.env.GITHUB_USERNAME || 'jsggm03';
     const REPO_NAME = process.env.REPO_NAME || 'dementia-quiz-knowledge';
 
     const { userName, score, total, results, timestamp } = JSON.parse(event.body);
