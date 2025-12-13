@@ -8,4 +8,4 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Access-Control-Allow-Origin = "*"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://agent.d-id.com https://*.d-id.com; frame-src https://agent.d-id.com https://*.d-id.com; connect-src https://*.d-id.com"
