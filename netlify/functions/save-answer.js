@@ -25,7 +25,6 @@ exports.handler = async (event) => {
       GITHUB_BRANCH = "main",
       DID_API_KEY,
       KNOWLEDGE_ID,
-      DID_DOCUMENT_ID,  // ← 새로 추가: D-ID 문서 ID
     } = process.env;
 
     if (!GITHUB_TOKEN || !GITHUB_USERNAME || !REPO_NAME) {
@@ -40,7 +39,7 @@ exports.handler = async (event) => {
     }
 
     /* ===============================
-       새 세션 기록 생성 (간결한 형식)
+       새 세션 기록 생성
     =============================== */
     const toKST = (iso) => {
       try {
@@ -53,7 +52,6 @@ exports.handler = async (event) => {
     const hwatuPicked = (hwatu?.picked || []).map((c) => c.label || c.key || c.id).join(", ");
     const hwatuRecallPicked = (hwatu?.recallPicked || []).map((c) => c.label || c.key || c.id).join(", ");
 
-    // 새 기록 블록
     const newRecord = [
       `========================================`,
       `[기록] ${userName} | ${toKST(startedAt)}`,
@@ -85,7 +83,6 @@ exports.handler = async (event) => {
     const fileName = "brain_activity_log.txt";
     const githubApiUrl = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${fileName}`;
 
-    // 1) 기존 파일 가져오기
     const getResponse = await fetch(githubApiUrl, {
       method: "GET",
       headers: {
@@ -103,20 +100,18 @@ exports.handler = async (event) => {
       existingContent = Buffer.from(fileData.content, "base64").toString("utf-8");
     }
 
-    // 2) 새 기록 추가 (최신 기록이 위로)
     const updatedContent = existingContent.replace(
       "# 두뇌활동 기록\n\n",
       `# 두뇌활동 기록\n\n${newRecord}`
     );
     const updatedContentBase64 = Buffer.from(updatedContent, "utf-8").toString("base64");
 
-    // 3) GitHub 업데이트
     const putBody = {
       message: `Update: ${userName} (${sessionId})`,
       content: updatedContentBase64,
       branch: GITHUB_BRANCH,
     };
-    if (sha) putBody.sha = sha;  // 기존 파일이면 SHA 필수
+    if (sha) putBody.sha = sha;
 
     const putResponse = await fetch(githubApiUrl, {
       method: "PUT",
@@ -140,21 +135,35 @@ exports.handler = async (event) => {
     const rawUrl = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${GITHUB_BRANCH}/${fileName}`;
 
     /* ===============================
-       D-ID Knowledge: 삭제 → 재등록
+       D-ID Knowledge: title로 찾아서 삭제 → 재등록
     =============================== */
     if (DID_API_KEY && KNOWLEDGE_ID) {
-      // 기존 문서 삭제 (DID_DOCUMENT_ID가 있을 때만)
-      if (DID_DOCUMENT_ID) {
-        await fetch(
-          `https://api.d-id.com/knowledge/${KNOWLEDGE_ID}/documents/${DID_DOCUMENT_ID}`,
-          {
-            method: "DELETE",
-            headers: { "Authorization": `Basic ${DID_API_KEY}` },
-          }
-        );
+      const DOC_TITLE = "두뇌활동_전체기록";
+
+      // 1) 문서 목록 조회
+      const listRes = await fetch(
+        `https://api.d-id.com/knowledge/${KNOWLEDGE_ID}/documents`,
+        {
+          headers: { "Authorization": `Basic ${DID_API_KEY}` },
+        }
+      );
+      const listData = await listRes.json();
+
+      // 2) 해당 title 문서만 삭제
+      const docs = listData.documents || [];
+      for (const doc of docs) {
+        if (doc.title === DOC_TITLE) {
+          await fetch(
+            `https://api.d-id.com/knowledge/${KNOWLEDGE_ID}/documents/${doc.id}`,
+            {
+              method: "DELETE",
+              headers: { "Authorization": `Basic ${DID_API_KEY}` },
+            }
+          );
+        }
       }
 
-      // 새 문서 등록
+      // 3) 새 문서 등록
       const didResponse = await fetch(
         `https://api.d-id.com/knowledge/${KNOWLEDGE_ID}/documents`,
         {
@@ -166,7 +175,7 @@ exports.handler = async (event) => {
           body: JSON.stringify({
             documentType: "text",
             source_url: rawUrl,
-            title: "두뇌활동_전체기록",
+            title: DOC_TITLE,
           }),
         }
       );
@@ -183,10 +192,6 @@ exports.handler = async (event) => {
           }),
         };
       }
-
-      // 새로 생성된 문서 ID 반환 (필요시 저장)
-      const didResult = await didResponse.json();
-      console.log("New D-ID Document ID:", didResult.id);
     }
 
     return {
