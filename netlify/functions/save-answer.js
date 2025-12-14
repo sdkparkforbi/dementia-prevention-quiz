@@ -1,20 +1,20 @@
 exports.handler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
   // CORS preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
   }
 
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
+      body: JSON.stringify({ error: "Method not allowed" }),
     };
   }
 
@@ -26,137 +26,197 @@ exports.handler = async (event) => {
       GITHUB_TOKEN,
       GITHUB_USERNAME,
       REPO_NAME,
-      GITHUB_BRANCH = 'main',
+      GITHUB_BRANCH = "main",
       DID_API_KEY,
-      KNOWLEDGE_ID
+      KNOWLEDGE_ID,
     } = process.env;
 
     if (!GITHUB_TOKEN || !GITHUB_USERNAME || !REPO_NAME) {
-      throw new Error('GitHub 환경변수가 누락되었습니다.');
+      throw new Error("GitHub 환경변수가 누락되었습니다. (GITHUB_TOKEN/USERNAME/REPO_NAME)");
     }
 
     /* ===============================
-       요청 데이터 (최종 HTML 기준)
+       요청 데이터
     =============================== */
+    const payload = JSON.parse(event.body || "{}");
+
     const {
       userName,
-      cards,        // [{id,n,img}]
-      recall,       // 기억 맞힌 개수 (0~3)
-      wordScore,    // 낱말 퀴즈 점수 (0~5)
-      healthScore,  // 치매예방 상식 점수 (0~5)
-      timestamp
-    } = JSON.parse(event.body);
+      sessionId,
+      startedAt,
+      endedAt,
+      hwatu,
+      word,
+      dementia,
+    } = payload;
 
-    if (!userName || !cards || !timestamp) {
-      throw new Error('요청 데이터가 올바르지 않습니다.');
+    if (!userName || !sessionId) {
+      throw new Error("요청 데이터가 누락되었습니다. (userName/sessionId)");
     }
 
     /* ===============================
-       Knowledge 문서 (아바타 최적화)
+       텍스트 문서 생성
     =============================== */
-    const fileContent = `
-[오늘의 두뇌 활동 기록]
+    const toKST = (iso) => {
+      try {
+        return new Date(iso).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+      } catch (e) {
+        return String(iso || "");
+      }
+    };
 
-이름: ${userName}
-날짜: ${new Date(timestamp).toLocaleString('ko-KR')}
+    const safe = (v) => (v === null || v === undefined ? "" : String(v));
 
-화투 기억 미션:
-- 선택한 카드: ${cards.map(c => c.n).join(', ')}
-- 다시 맞힌 카드 수: ${recall} / 3
+    const hwatuPicked = (hwatu?.picked || []).map((c) => c.label || c.key || c.id).join(", ");
+    const hwatuRecallPicked = (hwatu?.recallPicked || []).map((c) => c.label || c.key || c.id).join(", ");
 
-문해력 활동 (낱말 퀴즈):
-- 점수: ${wordScore} / 5
+    const wordResults = (word?.results || []).map((r, i) => {
+      return [
+        `문항 ${i + 1}`,
+        `질문: ${safe(r.question)}`,
+        `선택: ${safe(r.userAnswer)}`,
+        `정답: ${safe(r.correctAnswer)}`,
+        `결과: ${r.isCorrect ? "정답" : "오답"}`,
+        `설명: ${safe(r.explanation)}`,
+      ].join("\n");
+    }).join("\n\n");
 
-치매 예방 상식 퀴즈:
-- 점수: ${healthScore} / 5
+    const dementiaResults = (dementia?.results || []).map((r, i) => {
+      return [
+        `문제 ${i + 1}`,
+        `질문: ${safe(r.question)}`,
+        `선택: ${safe(r.userAnswer)}`,
+        `정답: ${safe(r.correctAnswer)}`,
+        `결과: ${r.isCorrect ? "정답" : "오답"}`,
+        `해설: ${safe(r.explanation)}`,
+      ].join("\n");
+    }).join("\n\n");
 
-종합 평가:
-화투를 활용한 기억 훈련과 낱말 중심의 언어 자극 활동을 수행함.
-놀이 형태의 인지 활동을 통해 기억력과 언어 기능을 고르게 사용함.
-일상적인 치매 예방 루틴으로 적절한 수준의 인지 자극이 이루어짐.
-`.trim();
+    // 아바타가 쉽게 읽도록 "요약 블록"을 문서 상단에 둡니다.
+    const summaryLines = [
+      `세션 요약`,
+      `- 이름: ${userName}`,
+      `- 세션: ${sessionId}`,
+      `- 화투 회상: ${hwatu?.recallCorrect ?? 0} / ${hwatu?.recallTotal ?? 3}`,
+      `- 낱말 퀴즈: ${word?.score ?? 0} / ${word?.total ?? 0}`,
+      `- 치매예방 퀴즈: ${dementia?.score ?? 0} / ${dementia?.total ?? 0}`,
+    ].join("\n");
+
+    const fileContent = [
+      `오늘의 두뇌 활동 결과 기록`,
+      `========================================`,
+      summaryLines,
+      ``,
+      `시간`,
+      `- 시작: ${toKST(startedAt)}`,
+      `- 종료: ${toKST(endedAt)}`,
+      ``,
+      `----------------------------------------`,
+      `1) 화투 운세 & 기억 훈련`,
+      `----------------------------------------`,
+      `선택 카드(3장): ${hwatuPicked || "(없음)"}`,
+      `회상 선택(3장): ${hwatuRecallPicked || "(없음)"}`,
+      `회상 정답: ${hwatu?.recallCorrect ?? 0} / ${hwatu?.recallTotal ?? 3}`,
+      `기억 보기 시간(ms): ${hwatu?.memoryShownMs ?? ""}`,
+      `기억 단계 경과(ms): ${hwatu?.memoryElapsedMs ?? ""}`,
+      `회상 단계 경과(ms): ${hwatu?.recallElapsedMs ?? ""}`,
+      ``,
+      `----------------------------------------`,
+      `2) 낱말 퀴즈(문해력)`,
+      `----------------------------------------`,
+      `점수: ${word?.score ?? 0} / ${word?.total ?? 0}`,
+      ``,
+      wordResults || "(결과 없음)",
+      ``,
+      `----------------------------------------`,
+      `3) 치매 예방 퀴즈(지식)`,
+      `----------------------------------------`,
+      `점수: ${dementia?.score ?? 0} / ${dementia?.total ?? 0}`,
+      ``,
+      dementiaResults || "(결과 없음)",
+      ``,
+      `----------------------------------------`,
+      `아바타 안내용 한마디`,
+      `----------------------------------------`,
+      `오늘도 두뇌 활동을 해주셔서 고맙습니다. 다음에 다시 해보시면 변화도 함께 볼 수 있어요.`,
+      ``,
+    ].join("\n");
 
     /* ===============================
-       파일명 (ASCII만 사용)
+       파일명 (ASCII만)
     =============================== */
-    const fileName = `cognitive_${Date.now()}.txt`;
-    const fileContentBase64 =
-      Buffer.from(fileContent, 'utf-8').toString('base64');
+    const fileName = `session_${sessionId}_${Date.now()}.txt`;
+    const fileContentBase64 = Buffer.from(fileContent, "utf-8").toString("base64");
 
     /* ===============================
-       GitHub 파일 저장
+       GitHub 파일 생성
     =============================== */
     const githubApiUrl =
       `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${fileName}`;
 
     const githubResponse = await fetch(githubApiUrl, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
+        "Authorization": `Bearer ${GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        message: `Add cognitive activity result (${userName})`,
+        message: `Add session result (${userName} / ${sessionId})`,
         content: fileContentBase64,
-        branch: GITHUB_BRANCH
-      })
+        branch: GITHUB_BRANCH,
+      }),
     });
 
     const githubText = await githubResponse.text();
-    console.log('GitHub status:', githubResponse.status);
-    console.log('GitHub response:', githubText);
-
     if (!githubResponse.ok) {
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
-          error: 'GitHub 저장 실패',
-          detail: githubText
-        })
+          error: "GitHub 저장 실패",
+          detail: githubText,
+        }),
       };
     }
 
     /* ===============================
-       Raw URL (D-ID Knowledge용)
+       Raw URL (D-ID용)
     =============================== */
     const rawUrl =
       `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${GITHUB_BRANCH}/${fileName}`;
 
     /* ===============================
-       D-ID Knowledge 등록
+       D-ID Knowledge 등록 (옵션)
+       - DID_API_KEY & KNOWLEDGE_ID 있을 때만
     =============================== */
     if (DID_API_KEY && KNOWLEDGE_ID) {
       const didResponse = await fetch(
         `https://api.d-id.com/knowledge/${KNOWLEDGE_ID}/documents`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Basic ${DID_API_KEY}`,
-            'Content-Type': 'application/json'
+            "Authorization": `Basic ${DID_API_KEY}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            documentType: 'text',
+            documentType: "text",
             source_url: rawUrl,
-            title: `${userName}_두뇌활동_기록`
-          })
+            title: `${userName}_두뇌활동_${sessionId}`,
+          }),
         }
       );
 
       const didText = await didResponse.text();
-      console.log('D-ID status:', didResponse.status);
-      console.log('D-ID response:', didText);
-
       if (!didResponse.ok) {
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
-            error: 'D-ID Knowledge 등록 실패',
+            error: "D-ID Knowledge 등록 실패",
             detail: didText,
-            githubUrl: rawUrl
-          })
+            githubUrl: rawUrl,
+          }),
         };
       }
     }
@@ -169,21 +229,19 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         success: true,
-        message: '두뇌 활동 결과가 저장되었습니다.',
-        githubUrl: rawUrl
-      })
+        message: "세션 결과가 저장되었습니다.",
+        githubUrl: rawUrl,
+      }),
     };
 
   } catch (err) {
-    console.error('Function error:', err);
-
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        error: '서버 처리 중 오류 발생',
-        detail: err.message
-      })
+        error: "서버 처리 중 오류 발생",
+        detail: err.message,
+      }),
     };
   }
 };
