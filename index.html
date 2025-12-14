@@ -162,20 +162,39 @@ ${cards.map(c=>`- ${c.m}월 ${c.n} (${c.s})`).join("\n")}
 - 분류 훈련: ${answers.class===season?"정확":"오답"}
 
 종합:
-이미지 기반 화투 놀이를 활용한 인지 자극 활동을 수행함.
+화투 이미지 기반 인지 자극 활동을 수행함.
 `;
 
- await fetch("/.netlify/functions/save-knowledge",{
+ const res = await fetch("/.netlify/functions/save-knowledge",{
   method:"POST",
   headers:{ "Content-Type":"application/json" },
   body:JSON.stringify({ content })
  });
 
- alert("결과가 저장되었습니다.\n아바타에게 결과를 물어보세요.");
+ if(res.ok){
+   triggerAvatarGreeting();
+   alert("결과가 저장되었습니다.\n아바타가 결과를 설명합니다.");
+ }else{
+   alert("저장 중 오류가 발생했습니다.");
+ }
+}
+
+/* ✅ 결과 저장 후 아바타 자동 발화 트리거 */
+function triggerAvatarGreeting(){
+  window.postMessage(
+    {
+      type: "DID_AGENT_EVENT",
+      event: "start-conversation",
+      payload: {
+        text: "방금 저장된 오늘 인지훈련 결과를 간단히 요약해서 어르신께 설명해 주세요."
+      }
+    },
+    "*"
+  );
 }
 </script>
 
-<!-- ✅ D-ID AI 아바타 (반드시 포함되어야 하는 부분) -->
+<!-- ✅ D-ID AI 아바타 (필수) -->
 <script type="module"
   src="https://agent.d-id.com/v2/index.js"
   data-mode="fabio"
