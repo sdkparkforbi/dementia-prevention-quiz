@@ -1,354 +1,191 @@
-<!DOCTYPE html>  <html lang="ko">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>치매예방 두뇌 게임</title>  
-    <style>  
-        * { margin: 0; padding: 0; box-sizing: border-box; }  
-        body {  
-            font-family: 'Malgun Gothic', sans-serif;  
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
-            min-height: 100vh;  
-            padding: 20px;  
-        }  
-        .container {  
-            max-width: 900px;  
-            margin: 0 auto;  
-        }  
-        h1 {  
-            text-align: center;  
-            color: white;  
-            font-size: 2.5em;  
-            margin-bottom: 30px;  
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);  
-        }  
-        .user-section {  
-            background: white;  
-            padding: 20px;  
-            border-radius: 15px;  
-            margin-bottom: 20px;  
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);  
-        }  
-        .user-section input {  
-            width: 100%;  
-            padding: 15px;  
-            font-size: 1.2em;  
-            border: 2px solid #667eea;  
-            border-radius: 10px;  
-        }  
-        .quiz-card {  
-            background: white;  
-            padding: 30px;  
-            border-radius: 20px;  
-            margin-bottom: 20px;  
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);  
-        }  
-        .quiz-number {  
-            background: #667eea;  
-            color: white;  
-            padding: 8px 20px;  
-            border-radius: 20px;  
-            display: inline-block;  
-            margin-bottom: 15px;  
-            font-weight: bold;  
-        }  
-        .quiz-question {  
-            font-size: 1.3em;  
-            color: #333;  
-            margin-bottom: 20px;  
-            line-height: 1.6;  
-        }  
-        .options {  
-            display: flex;  
-            flex-direction: column;  
-            gap: 12px;  
-        }  
-        .option {  
-            padding: 15px 20px;  
-            background: #f8f9fa;  
-            border: 2px solid #e9ecef;  
-            border-radius: 12px;  
-            cursor: pointer;  
-            transition: all 0.3s;  
-            font-size: 1.1em;  
-        }  
-        .option:hover {  
-            background: #e7f1ff;  
-            border-color: #667eea;  
-        }  
-        .option.selected {  
-            background: #667eea;  
-            color: white;  
-            border-color: #667eea;  
-        }  
-        .option.correct {  
-            background: #28a745;  
-            color: white;  
-            border-color: #28a745;  
-        }  
-        .option.wrong {  
-            background: #dc3545;  
-            color: white;  
-            border-color: #dc3545;  
-        }  
-        .submit-btn {  
-            width: 100%;  
-            padding: 18px;  
-            background: linear-gradient(135deg, #667eea, #764ba2);  
-            color: white;  
-            border: none;  
-            border-radius: 12px;  
-            font-size: 1.3em;  
-            cursor: pointer;  
-            margin-top: 20px;  
-            transition: transform 0.2s;  
-        }  
-        .submit-btn:hover { transform: scale(1.02); }  
-        .submit-btn:disabled {  
-            background: #ccc;  
-            cursor: not-allowed;  
-            transform: none;  
-        }  
-        .result-box {  
-            background: #f8f9fa;  
-            padding: 20px;  
-            border-radius: 12px;  
-            margin-top: 15px;  
-            display: none;  
-        }  
-        .result-box.show { display: block; }  
-        .result-box.correct-result {  
-            background: #d4edda;  
-            border: 2px solid #28a745;  
-        }  
-        .result-box.wrong-result {  
-            background: #f8d7da;  
-            border: 2px solid #dc3545;  
-        }  
-        .score-display {  
-            text-align: center;  
-            background: white;  
-            padding: 30px;  
-            border-radius: 20px;  
-            margin-top: 20px;  
-            display: none;  
-        }  
-        .score-display.show { display: block; }  
-        .score-number {  
-            font-size: 4em;  
-            color: #667eea;  
-            font-weight: bold;  
-        }  
-        .status-message {  
-            text-align: center;  
-            padding: 15px;  
-            border-radius: 10px;  
-            margin-top: 15px;  
-            display: none;  
-        }  
-        .status-message.show { display: block; }  
-        .status-message.success { background: #d4edda; color: #155724; }  
-        .status-message.error { background: #f8d7da; color: #721c24; }  
-    </style>  
-</head>  
-<body>  
-    <div class="container">  
-        <h1>🧠 치매예방 두뇌 게임</h1>  <div class="user-section">  
-        <label style="font-size: 1.2em; margin-bottom: 10px; display: block; color: #333;">  
-            👤 이름을 입력해주세요  
-        </label>  
-        <input type="text" id="userName" placeholder="홍길동">  
-    </div>  
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>치매예방 두뇌 게임</title>
 
-    <div id="quizContainer"></div>  
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+ font-family:'Malgun Gothic',sans-serif;
+ background:linear-gradient(135deg,#667eea,#764ba2);
+ min-height:100vh;padding:20px
+}
+.container{max-width:900px;margin:0 auto}
+h1{text-align:center;color:white;margin-bottom:30px}
 
-    <button class="submit-btn" id="submitBtn" onclick="submitAllAnswers()">  
-        📝 답변 제출하기  
-    </button>  
+.panel{background:white;padding:20px;border-radius:15px;margin-bottom:20px}
+input{
+ width:100%;padding:15px;font-size:1.2em;
+ border-radius:10px;border:2px solid #667eea
+}
+button{
+ width:100%;padding:16px;border:none;border-radius:12px;
+ background:#667eea;color:white;font-size:1.2em;cursor:pointer
+}
 
-    <div class="status-message" id="statusMessage"></div>  
+.cards,.quiz-cards{
+ display:flex;gap:12px;justify-content:center;margin-top:15px
+}
+.hwatu-img{
+ width:70px;aspect-ratio:3/5;object-fit:contain;
+ border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.2)
+}
+.card-back{
+ width:70px;aspect-ratio:3/5;
+ background:#333;color:white;
+ display:flex;align-items:center;justify-content:center;
+ border-radius:8px;font-size:1.2em;font-weight:bold
+}
 
-    <div class="score-display" id="scoreDisplay">  
-        <p style="font-size: 1.5em; margin-bottom: 10px;">최종 점수</p>  
-        <div class="score-number" id="finalScore">0</div>  
-        <p style="font-size: 1.2em; color: #666;">/ <span id="totalQuestions">0</span>문제</p>  
-    </div>  
-</div>  
+.quiz-card{
+ background:white;padding:20px;border-radius:15px;margin-bottom:15px
+}
+.option{
+ padding:12px;border:2px solid #ddd;border-radius:10px;
+ margin-top:8px;cursor:pointer
+}
+.option.selected{background:#667eea;color:white}
+</style>
+</head>
 
-<!-- D-ID 아바타 -->  
-<script type="module"  
-    src="https://agent.d-id.com/v2/index.js"  
-    data-mode="fabio"  
-    data-client-key="Z29vZ2xlLW9hdXRoMnwxMTI3NjQ3MzA0NTM3NjA0MTgyMTI6d01EN0x6bFFFMmlZSk9nUHNacXll"  
-    data-agent-id="v2_agt_adow2aMU"  
-    data-name="did-agent"  
-    data-monitor="true"  
-    data-orientation="horizontal"  
-    data-position="right">  
-</script>  
+<body>
+<div class="container">
+<h1>🧠 치매예방 두뇌 게임</h1>
 
-<script>  
-    const quizData = [  
-        {  
-            question: "다음 중 치매 예방에 가장 효과적인 활동은 무엇일까요?",  
-            options: [  
-                "하루 종일 TV 시청하기",  
-                "규칙적인 운동과 두뇌 활동",  
-                "혼자서 집에만 있기",  
-                "같은 음식만 먹기"  
-            ],  
-            correct: 1,  
-            explanation: "규칙적인 운동은 뇌 혈류를 증가시키고, 두뇌 활동은 신경 연결을 강화하여 치매 예방에 효과적입니다."  
-        },  
-        {  
-            question: "기억력 향상에 도움이 되는 식품이 아닌 것은?",  
-            options: [  
-                "등푸른 생선 (고등어, 연어)",  
-                "호두, 아몬드 등 견과류",  
-                "시금치, 브로콜리 등 녹색 채소",  
-                "가공식품과 패스트푸드"  
-            ],  
-            correct: 3,  
-            explanation: "오메가-3가 풍부한 생선, 비타민E가 많은 견과류, 항산화 성분이 풍부한 녹색 채소는 뇌 건강에 좋습니다. 가공식품은 뇌 건강에 해롭습니다."  
-        },  
-        {  
-            question: "치매 초기 증상으로 올바른 것은?",  
-            options: [  
-                "최근 일을 자주 잊어버린다",  
-                "옛날 일을 기억하지 못한다",  
-                "모든 것을 완벽하게 기억한다",  
-                "잠을 많이 잔다"  
-            ],  
-            correct: 0,  
-            explanation: "치매 초기에는 최근 일(단기 기억)을 잊어버리는 증상이 먼저 나타나고, 오래된 기억(장기 기억)은 비교적 보존됩니다."  
-        },  
-        {  
-            question: "두뇌 건강을 위한 수면 시간으로 적당한 것은?",  
-            options: [  
-                "3-4시간",  
-                "5-6시간",  
-                "7-8시간",  
-                "10시간 이상"  
-            ],  
-            correct: 2,  
-            explanation: "성인은 7-8시간의 수면이 권장됩니다. 수면 중에 뇌의 노폐물이 제거되고 기억이 정리됩니다."  
-        },  
-        {  
-            question: "다음 중 사회적 활동이 치매 예방에 도움이 되는 이유는?",  
-            options: [  
-                "돈을 벌 수 있어서",  
-                "뇌를 다양하게 자극하기 때문에",  
-                "운동량이 늘어서",  
-                "식사를 잘 하게 되어서"  
-            ],  
-            correct: 1,  
-            explanation: "사회적 활동은 대화, 감정 교류, 문제 해결 등 다양한 뇌 기능을 사용하게 하여 인지 기능 유지에 도움이 됩니다."  
-        }  
-    ];  
+<div class="panel">
+<label>👤 이름</label>
+<input id="userName" placeholder="홍길동">
+</div>
 
-    let userAnswers = {};  
+<div class="panel">
+<button onclick="startGame()">🎴 화투 3장 뽑기</button>
+<div class="cards" id="cardArea"></div>
+<p id="hint" style="text-align:center;margin-top:10px;"></p>
+</div>
 
-    function renderQuizzes() {  
-        const container = document.getElementById('quizContainer');  
-        container.innerHTML = quizData.map((quiz, index) => `  
-            <div class="quiz-card" id="quiz-${index}">  
-                <div class="quiz-number">문제 ${index + 1}</div>  
-                <div class="quiz-question">${quiz.question}</div>  
-                <div class="options">  
-                    ${quiz.options.map((opt, optIndex) => `  
-                        <div class="option" data-quiz="${index}" data-option="${optIndex}" onclick="selectOption(${index}, ${optIndex})">  
-                            ${optIndex + 1}. ${opt}  
-                        </div>  
-                    `).join('')}  
-                </div>  
-                <div class="result-box" id="result-${index}">  
-                    <strong>해설:</strong> ${quiz.explanation}  
-                </div>  
-            </div>  
-        `).join('');  
-        document.getElementById('totalQuestions').textContent = quizData.length;  
-    }  
+<div id="quizArea"></div>
 
-    function selectOption(quizIndex, optionIndex) {  
-        const options = document.querySelectorAll(`[data-quiz="${quizIndex}"]`);  
-        options.forEach(opt => opt.classList.remove('selected'));  
-        options[optionIndex].classList.add('selected');  
-        userAnswers[quizIndex] = optionIndex;  
-    }  
+<button onclick="submitResult()">결과 저장하기</button>
+</div>
 
-    async function submitAllAnswers() {  
-        const userName = document.getElementById('userName').value.trim();  
-        if (!userName) {  
-            alert('이름을 입력해주세요!');  
-            return;  
-        }  
+<script>
+const deck=[
+ {m:1,n:"소나무",s:"겨울",i:"/hwatu/01_pine.png"},
+ {m:2,n:"매화",s:"겨울",i:"/hwatu/02_plum.png"},
+ {m:3,n:"벚꽃",s:"봄",i:"/hwatu/03_cherry.png"},
+ {m:4,n:"등나무",s:"봄",i:"/hwatu/04_wisteria.png"},
+ {m:5,n:"창포",s:"봄",i:"/hwatu/05_iris.png"},
+ {m:6,n:"모란",s:"여름",i:"/hwatu/06_peony.png"},
+ {m:7,n:"싸리",s:"여름",i:"/hwatu/07_bushclover.png"},
+ {m:8,n:"공산",s:"여름",i:"/hwatu/08_grass.png"},
+ {m:9,n:"국화",s:"가을",i:"/hwatu/09_chrysanthemum.png"},
+ {m:10,n:"단풍",s:"가을",i:"/hwatu/10_maple.png"},
+ {m:11,n:"오동",s:"가을",i:"/hwatu/11_paulownia.png"},
+ {m:12,n:"비/학",s:"겨울",i:"/hwatu/12_rain.png"}
+];
 
-        if (Object.keys(userAnswers).length < quizData.length) {  
-            alert('모든 문제에 답해주세요!');  
-            return;  
-        }  
+let cards=[],answers={};
+const shuffle=a=>a.sort(()=>Math.random()-0.5);
 
-        const submitBtn = document.getElementById('submitBtn');  
-        submitBtn.disabled = true;  
-        submitBtn.textContent = '⏳ 저장 중...';  
+function startGame(){
+ cards=shuffle([...deck]).slice(0,3);
+ document.getElementById("cardArea").innerHTML=
+  cards.map(c=>`<img src="${c.i}" class="hwatu-img">`).join("");
+ document.getElementById("hint").innerText="카드를 3초 동안 기억해주세요.";
+ setTimeout(hideCards,3000);
+}
 
-        let correctCount = 0;  
-        const results = [];  
+function hideCards(){
+ document.getElementById("cardArea").innerHTML=
+  cards.map(()=>`<div class="card-back">?</div>`).join("");
+ renderQuiz();
+}
 
-        quizData.forEach((quiz, index) => {  
-            const userAnswer = userAnswers[index];  
-            const isCorrect = userAnswer === quiz.correct;  
-            if (isCorrect) correctCount++;  
+function renderQuiz(){
+ const sum=cards.reduce((a,c)=>a+c.m,0);
+ const season=most(cards.map(c=>c.s));
 
-            const options = document.querySelectorAll(`[data-quiz="${index}"]`);  
-            options[userAnswer].classList.add(isCorrect ? 'correct' : 'wrong');  
-            if (!isCorrect) {  
-                options[quiz.correct].classList.add('correct');  
-            }  
+ document.getElementById("quizArea").innerHTML=`
+ <div class="quiz-card">
+  <b>기억 훈련</b>
+  ${shuffle(cards.map(c=>c.n))
+    .map(n=>`<div class="option" onclick="sel('mem','${n}',this)">${n}</div>`).join("")}
+ </div>
 
-            const resultBox = document.getElementById(`result-${index}`);  
-            resultBox.classList.add('show', isCorrect ? 'correct-result' : 'wrong-result');  
+ <div class="quiz-card">
+  <b>계산 훈련</b>
+  <div class="quiz-cards">
+    ${cards.map(c=>`<img src="${c.i}" class="hwatu-img">`).join("")}
+  </div>
+  ${shuffle([sum,sum+1,sum-1,sum+2])
+    .map(n=>`<div class="option" onclick="sel('calc',${n},this)">${n}</div>`).join("")}
+ </div>
 
-            results.push({  
-                question: quiz.question,  
-                userAnswer: quiz.options[userAnswer],  
-                correctAnswer: quiz.options[quiz.correct],  
-                isCorrect: isCorrect  
-            });  
-        });  
+ <div class="quiz-card">
+  <b>분류 훈련</b>
+  <div class="quiz-cards">
+    ${cards.map(c=>`<img src="${c.i}" class="hwatu-img">`).join("")}
+  </div>
+  ${["봄","여름","가을","겨울"]
+    .map(s=>`<div class="option" onclick="sel('class','${s}',this)">${s}</div>`).join("")}
+ </div>`;
+}
 
-        document.getElementById('finalScore').textContent = correctCount;  
-        document.getElementById('scoreDisplay').classList.add('show');  
+function sel(k,v,el){
+ answers[k]=v;
+ el.parentNode.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+ el.classList.add('selected');
+}
 
-        const answerData = {  
-            userName: userName,  
-            score: correctCount,  
-            total: quizData.length,  
-            results: results,  
-            timestamp: new Date().toISOString()  
-        };  
+function most(a){
+ return a.sort((x,y)=>a.filter(v=>v===x).length-a.filter(v=>v===y).length).pop();
+}
 
-        const response = await fetch('/.netlify/functions/save-answer', {  
-            method: 'POST',  
-            headers: { 'Content-Type': 'application/json' },  
-            body: JSON.stringify(answerData)  
-        });  
+async function submitResult(){
+ const name=document.getElementById("userName").value || "이름없음";
+ const sum=cards.reduce((a,c)=>a+c.m,0);
+ const season=most(cards.map(c=>c.s));
 
-        const statusMessage = document.getElementById('statusMessage');  
-        if (response.ok) {  
-            const data = await response.json();  
-            statusMessage.textContent = `✅ ${userName}님의 결과가 저장되었습니다! 아바타에게 결과를 물어보세요.`;  
-            statusMessage.className = 'status-message show success';  
-        } else {  
-            statusMessage.textContent = '⚠️ 저장 중 오류가 발생했습니다.';  
-            statusMessage.className = 'status-message show error';  
-        }  
+ const content=`
+[${new Date().toLocaleDateString()} 화투 인지훈련 결과]
 
-        submitBtn.textContent = '✅ 제출 완료';  
-    }  
+이름: ${name}
 
-    renderQuizzes();  
+화투패:
+${cards.map(c=>`- ${c.m}월 ${c.n} (${c.s})`).join("\n")}
+
+결과:
+- 기억 훈련: ${answers.mem===cards[0].n?"정확":"오답"}
+- 계산 훈련: ${answers.calc==sum?"정확":"오답"}
+- 분류 훈련: ${answers.class===season?"정확":"오답"}
+
+종합:
+이미지 기반 화투 놀이를 활용한 인지 자극 활동을 수행함.
+`;
+
+ await fetch("/.netlify/functions/save-knowledge",{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({ content })
+ });
+
+ alert("결과가 저장되었습니다.\n아바타에게 결과를 물어보세요.");
+}
 </script>
 
-</body>  
+<!-- ✅ D-ID AI 아바타 (반드시 포함되어야 하는 부분) -->
+<script type="module"
+  src="https://agent.d-id.com/v2/index.js"
+  data-mode="fabio"
+  data-client-key="여기에_본인_DID_CLIENT_KEY"
+  data-agent-id="여기에_본인_AGENT_ID"
+  data-name="did-agent"
+  data-monitor="true"
+  data-orientation="horizontal"
+  data-position="right">
+</script>
+
+</body>
 </html>
