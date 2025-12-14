@@ -1,210 +1,287 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>치매예방 두뇌 게임</title>
+  <meta charset="UTF-8">
+  <title>치매예방 두뇌 활동</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{
- font-family:'Malgun Gothic',sans-serif;
- background:linear-gradient(135deg,#667eea,#764ba2);
- min-height:100vh;padding:20px
-}
-.container{max-width:900px;margin:0 auto}
-h1{text-align:center;color:white;margin-bottom:30px}
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      background: linear-gradient(135deg,#667eea,#764ba2);
+      min-height:100vh;
+      padding:20px;
+    }
+    .container { max-width:900px; margin:0 auto; }
+    h1 { color:#fff; text-align:center; margin-bottom:20px; }
 
-.panel{background:white;padding:20px;border-radius:15px;margin-bottom:20px}
-input{
- width:100%;padding:15px;font-size:1.2em;
- border-radius:10px;border:2px solid #667eea
-}
-button{
- width:100%;padding:16px;border:none;border-radius:12px;
- background:#667eea;color:white;font-size:1.2em;cursor:pointer
-}
+    .card {
+      background:#fff;
+      border-radius:16px;
+      padding:24px;
+      margin-bottom:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,.2);
+    }
 
-.cards,.quiz-cards{
- display:flex;gap:12px;justify-content:center;margin-top:15px
-}
-.hwatu-img{
- width:70px;aspect-ratio:3/5;object-fit:contain;
- border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,.2)
-}
-.card-back{
- width:70px;aspect-ratio:3/5;
- background:#333;color:white;
- display:flex;align-items:center;justify-content:center;
- border-radius:8px;font-size:1.2em;font-weight:bold
-}
+    .title { font-size:1.3em; margin-bottom:12px; color:#333; }
+    .desc { color:#555; margin-bottom:12px; line-height:1.5; }
 
-.quiz-card{
- background:white;padding:20px;border-radius:15px;margin-bottom:15px
-}
-.option{
- padding:12px;border:2px solid #ddd;border-radius:10px;
- margin-top:8px;cursor:pointer
-}
-.option.selected{background:#667eea;color:white}
-</style>
+    .grid {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:10px;
+    }
+
+    img.hwatu {
+      width:80px;
+      cursor:pointer;
+      border-radius:8px;
+    }
+
+    .option {
+      padding:14px;
+      border:2px solid #e9ecef;
+      border-radius:12px;
+      cursor:pointer;
+      background:#f8f9fa;
+      margin-bottom:10px;
+    }
+    .option.selected {
+      background:#667eea;
+      color:#fff;
+      border-color:#667eea;
+    }
+
+    .btn {
+      width:100%;
+      padding:16px;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      border:none;
+      color:#fff;
+      font-size:1.2em;
+      border-radius:12px;
+      cursor:pointer;
+      margin-top:15px;
+    }
+
+    .hidden { display:none; }
+  </style>
 </head>
 
 <body>
 <div class="container">
-<h1>🧠 치매예방 두뇌 게임</h1>
+  <h1>🧠 오늘의 두뇌 활동</h1>
 
-<div class="panel">
-<label>👤 이름</label>
-<input id="userName" placeholder="홍길동">
-</div>
-
-<div class="panel">
-<button onclick="startGame()">🎴 화투 3장 뽑기</button>
-<div class="cards" id="cardArea"></div>
-<p id="hint" style="text-align:center;margin-top:10px;"></p>
-</div>
-
-<div id="quizArea"></div>
-
-<button onclick="submitResult()">결과 저장하기</button>
-</div>
-
-<script>
-const deck=[
- {m:1,n:"소나무",s:"겨울",i:"/hwatu/01_pine.png"},
- {m:2,n:"매화",s:"겨울",i:"/hwatu/02_plum.png"},
- {m:3,n:"벚꽃",s:"봄",i:"/hwatu/03_cherry.png"},
- {m:4,n:"등나무",s:"봄",i:"/hwatu/04_wisteria.png"},
- {m:5,n:"창포",s:"봄",i:"/hwatu/05_iris.png"},
- {m:6,n:"모란",s:"여름",i:"/hwatu/06_peony.png"},
- {m:7,n:"싸리",s:"여름",i:"/hwatu/07_bushclover.png"},
- {m:8,n:"공산",s:"여름",i:"/hwatu/08_grass.png"},
- {m:9,n:"국화",s:"가을",i:"/hwatu/09_chrysanthemum.png"},
- {m:10,n:"단풍",s:"가을",i:"/hwatu/10_maple.png"},
- {m:11,n:"오동",s:"가을",i:"/hwatu/11_paulownia.png"},
- {m:12,n:"비/학",s:"겨울",i:"/hwatu/12_rain.png"}
-];
-
-let cards=[],answers={};
-const shuffle=a=>a.sort(()=>Math.random()-0.5);
-
-function startGame(){
- cards=shuffle([...deck]).slice(0,3);
- document.getElementById("cardArea").innerHTML=
-  cards.map(c=>`<img src="${c.i}" class="hwatu-img">`).join("");
- document.getElementById("hint").innerText="카드를 3초 동안 기억해주세요.";
- setTimeout(hideCards,3000);
-}
-
-function hideCards(){
- document.getElementById("cardArea").innerHTML=
-  cards.map(()=>`<div class="card-back">?</div>`).join("");
- renderQuiz();
-}
-
-function renderQuiz(){
- const sum=cards.reduce((a,c)=>a+c.m,0);
- const season=most(cards.map(c=>c.s));
-
- document.getElementById("quizArea").innerHTML=`
- <div class="quiz-card">
-  <b>기억 훈련</b>
-  ${shuffle(cards.map(c=>c.n))
-    .map(n=>`<div class="option" onclick="sel('mem','${n}',this)">${n}</div>`).join("")}
- </div>
-
- <div class="quiz-card">
-  <b>계산 훈련</b>
-  <div class="quiz-cards">
-    ${cards.map(c=>`<img src="${c.i}" class="hwatu-img">`).join("")}
+  <div class="card">
+    <label>이름을 입력해주세요</label>
+    <input id="userName" style="width:100%;padding:12px;font-size:1.1em">
   </div>
-  ${shuffle([sum,sum+1,sum-1,sum+2])
-    .map(n=>`<div class="option" onclick="sel('calc',${n},this)">${n}</div>`).join("")}
- </div>
 
- <div class="quiz-card">
-  <b>분류 훈련</b>
-  <div class="quiz-cards">
-    ${cards.map(c=>`<img src="${c.i}" class="hwatu-img">`).join("")}
-  </div>
-  ${["봄","여름","가을","겨울"]
-    .map(s=>`<div class="option" onclick="sel('class','${s}',this)">${s}</div>`).join("")}
- </div>`;
-}
+  <div id="app"></div>
+</div>
 
-function sel(k,v,el){
- answers[k]=v;
- el.parentNode.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
- el.classList.add('selected');
-}
-
-function most(a){
- return a.sort((x,y)=>a.filter(v=>v===x).length-a.filter(v=>v===y).length).pop();
-}
-
-async function submitResult(){
- const name=document.getElementById("userName").value || "이름없음";
- const sum=cards.reduce((a,c)=>a+c.m,0);
- const season=most(cards.map(c=>c.s));
-
- const content=`
-[${new Date().toLocaleDateString()} 화투 인지훈련 결과]
-
-이름: ${name}
-
-화투패:
-${cards.map(c=>`- ${c.m}월 ${c.n} (${c.s})`).join("\n")}
-
-결과:
-- 기억 훈련: ${answers.mem===cards[0].n?"정확":"오답"}
-- 계산 훈련: ${answers.calc==sum?"정확":"오답"}
-- 분류 훈련: ${answers.class===season?"정확":"오답"}
-
-종합:
-화투 이미지 기반 인지 자극 활동을 수행함.
-`;
-
- const res = await fetch("/.netlify/functions/save-knowledge",{
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body:JSON.stringify({ content })
- });
-
- if(res.ok){
-   triggerAvatarGreeting();
-   alert("결과가 저장되었습니다.\n아바타가 결과를 설명합니다.");
- }else{
-   alert("저장 중 오류가 발생했습니다.");
- }
-}
-
-/* ✅ 결과 저장 후 아바타 자동 발화 트리거 */
-function triggerAvatarGreeting(){
-  window.postMessage(
-    {
-      type: "DID_AGENT_EVENT",
-      event: "start-conversation",
-      payload: {
-        text: "방금 저장된 오늘 인지훈련 결과를 간단히 요약해서 어르신께 설명해 주세요."
-      }
-    },
-    "*"
-  );
-}
-</script>
-
-<!-- ✅ D-ID AI 아바타 (필수) -->
+<!-- D-ID 아바타 -->
 <script type="module"
   src="https://agent.d-id.com/v2/index.js"
   data-mode="fabio"
-  data-client-key="Z29vZ2xlLW9hdXRoMnwxMTI3NjQ3MzA0NTM3NjA0MTgyMTI6d01EN0x6bFFFMmlZSk9nUHNacXll"
-  data-agent-id="v2_agt_adow2aMU"
+  data-client-key="YOUR_CLIENT_KEY"
+  data-agent-id="YOUR_AGENT_ID"
   data-name="did-agent"
   data-monitor="true"
-  data-orientation="horizontal"
   data-position="right">
 </script>
 
+<script>
+/* ===============================
+   공통 데이터
+=============================== */
+const app = document.getElementById('app');
+
+const deck = [
+  {id:1,n:'소나무',img:'/hwatu/01_pine.png'},
+  {id:2,n:'매화',img:'/hwatu/02_plum.png'},
+  {id:3,n:'벚꽃',img:'/hwatu/03_cherry.png'},
+  {id:4,n:'등나무',img:'/hwatu/04_wisteria.png'},
+  {id:5,n:'창포',img:'/hwatu/05_iris.png'},
+  {id:6,n:'모란',img:'/hwatu/06_peony.png'},
+  {id:7,n:'싸리',img:'/hwatu/07_bushclover.png'},
+  {id:8,n:'억새',img:'/hwatu/08_grass.png'},
+  {id:9,n:'국화',img:'/hwatu/09_chrysanthemum.png'},
+  {id:10,n:'단풍',img:'/hwatu/10_maple.png'},
+  {id:11,n:'오동',img:'/hwatu/11_paulownia.png'},
+  {id:12,n:'비',img:'/hwatu/12_rain.png'}
+];
+
+let chosen = [];
+let recallResult = 0;
+let wordScore = 0;
+let healthScore = 0;
+
+/* ===============================
+   STEP 0 운세 카드 선택
+=============================== */
+function startFortune() {
+  chosen=[];
+  const shuffled=[...deck].sort(()=>Math.random()-0.5);
+  app.innerHTML=`
+    <div class="card">
+      <div class="title">오늘의 화투 운세</div>
+      <div class="desc">마음에 드는 카드 3장을 골라주세요.</div>
+      <div class="grid">
+        ${shuffled.map((c,i)=>`
+          <img class="hwatu" src="/hwatu/back.png"
+            onclick="pickCard(${i})">
+        `).join('')}
+      </div>
+    </div>
+  `;
+  window._deck=shuffled;
+}
+
+function pickCard(i){
+  if(chosen.length>=3)return;
+  chosen.push(window._deck[i]);
+  if(chosen.length===3) showMemory();
+}
+
+/* ===============================
+   STEP 1 기억 화면
+=============================== */
+function showMemory(){
+  app.innerHTML=`
+    <div class="card">
+      <div class="title">카드를 기억해주세요</div>
+      <div class="desc">잠시 후 다시 맞춰봅니다.</div>
+      <div class="grid">
+        ${chosen.map(c=>`<img class="hwatu" src="${c.img}">`).join('')}
+      </div>
+    </div>
+  `;
+  setTimeout(recallStep,5000);
+}
+
+/* ===============================
+   STEP 2 회상
+=============================== */
+function recallStep(){
+  const shuffled=[...deck].sort(()=>Math.random()-0.5);
+  let picked=[];
+  app.innerHTML=`
+    <div class="card">
+      <div class="title">방금 뽑았던 카드를 다시 골라보세요</div>
+      <div class="grid">
+        ${shuffled.map((c,i)=>`
+          <img class="hwatu" src="${c.img}"
+           onclick="recallPick(${i},this)">
+        `).join('')}
+      </div>
+    </div>
+  `;
+  window._recallDeck=shuffled;
+  window._picked=picked;
+}
+
+function recallPick(i,el){
+  if(window._picked.length>=3)return;
+  el.style.border='3px solid #667eea';
+  window._picked.push(window._recallDeck[i]);
+  if(window._picked.length===3){
+    recallResult=window._picked.filter(p=>chosen.some(c=>c.id===p.id)).length;
+    wordQuiz();
+  }
+}
+
+/* ===============================
+   STEP 3 낱말 퀴즈 5문항
+=============================== */
+const wordQuizData=[
+ {q:'마음이 조급하지 않고 편안한 상태',o:['긴장','여유','혼란','분주'],c:1},
+ {q:'주의 깊게 하지 않고 대충 하는 것',o:['성실','꼼꼼','소홀','철저'],c:2},
+ {q:'겉으로 드러나지 않게 조용히',o:['갑자기','은근히','크게','급히'],c:1},
+ {q:'잘 해냈다고 느껴 든든한 상태',o:['불안','뿌듯','허전','걱정'],c:1},
+ {q:'마음이 가라앉아 침착한 상태',o:['산만','차분','급함','어수선'],c:1}
+];
+
+function wordQuiz(){
+  wordScore=0;
+  app.innerHTML=`
+    <div class="card">
+      <div class="title">오늘의 두뇌 활동</div>
+      <div class="desc">다음 설명에 맞는 단어를 골라보세요.</div>
+    </div>
+  `;
+  wordQuizData.forEach((q,i)=>{
+    app.innerHTML+=`
+      <div class="card">
+        <div class="desc">${q.q}</div>
+        ${q.o.map((o,idx)=>`
+          <div class="option"
+            onclick="this.classList.toggle('selected');
+            if(${idx}===${q.c})wordScore++">
+            ${o}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+  app.innerHTML+=`<button class="btn" onclick="healthQuiz()">다음</button>`;
+}
+
+/* ===============================
+   STEP 4 치매 예방 상식 퀴즈
+=============================== */
+const healthQuizData=[
+ {q:'치매 예방에 가장 효과적인 활동은?',o:['TV','운동과 두뇌활동','혼자있기','편식'],c:1},
+ {q:'기억력에 좋지 않은 음식은?',o:['생선','견과','채소','패스트푸드'],c:3},
+ {q:'치매 초기 증상은?',o:['최근기억 저하','완벽기억','과수면','무증상'],c:0},
+ {q:'적절한 수면 시간은?',o:['4','6','7-8','10'],c:2},
+ {q:'사회활동이 좋은 이유는?',o:['돈','자극','운동','식사'],c:1}
+];
+
+function healthQuiz(){
+  healthScore=0;
+  app.innerHTML='';
+  healthQuizData.forEach((q,i)=>{
+    app.innerHTML+=`
+      <div class="card">
+        <div class="desc">${q.q}</div>
+        ${q.o.map((o,idx)=>`
+          <div class="option"
+           onclick="this.classList.toggle('selected');
+           if(${idx}===${q.c})healthScore++">
+           ${o}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  });
+  app.innerHTML+=`<button class="btn" onclick="saveAll()">결과 저장</button>`;
+}
+
+/* ===============================
+   저장
+=============================== */
+async function saveAll(){
+  const userName=document.getElementById('userName').value;
+  await fetch('/.netlify/functions/save-answer',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      userName,
+      cards:chosen,
+      recall:recallResult,
+      wordScore,
+      healthScore,
+      timestamp:new Date().toISOString()
+    })
+  });
+  app.innerHTML=`<div class="card"><div class="title">오늘도 수고하셨습니다 🌱</div></div>`;
+}
+
+/* 시작 */
+startFortune();
+</script>
 </body>
 </html>
