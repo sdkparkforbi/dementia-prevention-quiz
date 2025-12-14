@@ -36,44 +36,59 @@ exports.handler = async (event) => {
     }
 
     /* ===============================
-       요청 데이터
+       요청 데이터 (화투 인지훈련 전용)
     =============================== */
-    const { userName, score, total, results, timestamp } =
-      JSON.parse(event.body);
+    const {
+      userName,
+      cards,          // [{ m, n, s }]
+      answers,        // { mem, calc, class }
+      sum,            // 월 합
+      season,         // 정답 계절
+      timestamp
+    } = JSON.parse(event.body);
+
+    if (!userName || !cards || !answers) {
+      throw new Error('요청 데이터가 올바르지 않습니다.');
+    }
 
     /* ===============================
-       파일 내용 (한글 OK)
+       결과 판정
     =============================== */
-    const resultDetails = results.map((r, i) =>
-      `문제 ${i + 1}
-질문: ${r.question}
-선택: ${r.userAnswer}
-정답: ${r.correctAnswer}
-결과: ${r.isCorrect ? '정답' : '오답'}`
-    ).join('\n\n');
+    const memoryCorrect = answers.mem === cards[0].n;
+    const calcCorrect   = Number(answers.calc) === Number(sum);
+    const classCorrect  = answers.class === season;
 
+    /* ===============================
+       Knowledge 문서 (아바타 최적화)
+    =============================== */
     const fileContent = `
-치매예방 퀴즈 결과
-========================
-이름: ${userName}
-점수: ${score} / ${total}
-정답률: ${Math.round((score / total) * 100)}%
-응답 시간: ${new Date(timestamp).toLocaleString('ko-KR')}
+[${new Date(timestamp).toLocaleDateString('ko-KR')} 화투 인지훈련 기록]
 
-상세 결과
-------------------------
-${resultDetails}
+이름: ${userName}
+
+오늘의 화투 카드:
+${cards.map(c => `- ${c.m}월 ${c.n} (${c.s})`).join('\n')}
+
+인지훈련 결과 요약:
+- 기억 훈련: ${memoryCorrect ? '첫 번째 화투패를 정확히 기억함' : '첫 번째 화투패 기억에 어려움이 있었음'}
+- 계산 훈련: ${calcCorrect ? `월의 합 ${sum}을 정확히 계산함` : '월의 합 계산에서 혼동이 있었음'}
+- 분류 훈련: ${classCorrect ? `${season} 계절로 올바르게 분류함` : '계절 분류에서 혼동이 있었음'}
+
+종합 평가:
+화투 이미지를 활용한 기억, 계산, 분류 인지 자극 활동을 수행함.
+천천히 문제를 해결하려는 태도가 관찰되었으며,
+일상적인 놀이 기반 인지 훈련으로 활용 가능함.
 `.trim();
 
     /* ===============================
-       파일명 (ASCII만 사용)
+       파일명 (ASCII만)
     =============================== */
-    const fileName = `quiz_${Date.now()}.txt`;
+    const fileName = `hwatu_${Date.now()}.txt`;
     const fileContentBase64 =
       Buffer.from(fileContent, 'utf-8').toString('base64');
 
     /* ===============================
-       GitHub 파일 생성
+       GitHub 업로드
     =============================== */
     const githubApiUrl =
       `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${fileName}`;
@@ -86,7 +101,7 @@ ${resultDetails}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: `Add quiz result (${userName})`,
+        message: `Add hwatu cognitive result (${userName})`,
         content: fileContentBase64,
         branch: GITHUB_BRANCH
       })
@@ -108,14 +123,13 @@ ${resultDetails}
     }
 
     /* ===============================
-       Raw URL (D-ID용)
+       Raw URL (D-ID Knowledge용)
     =============================== */
     const rawUrl =
       `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${GITHUB_BRANCH}/${fileName}`;
 
     /* ===============================
-       D-ID Knowledge 등록 (선택)
-       → 환경변수 있으면 실행
+       D-ID Knowledge 등록
     =============================== */
     if (DID_API_KEY && KNOWLEDGE_ID) {
       const didResponse = await fetch(
@@ -129,7 +143,7 @@ ${resultDetails}
           body: JSON.stringify({
             documentType: 'text',
             source_url: rawUrl,
-            title: `${userName}_치매예방퀴즈결과`
+            title: `${userName}_화투_인지훈련_기록`
           })
         }
       );
@@ -152,14 +166,14 @@ ${resultDetails}
     }
 
     /* ===============================
-       성공 응답
+       성공
     =============================== */
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        message: '퀴즈 결과가 GitHub에 저장되었습니다.',
+        message: '화투 인지훈련 결과가 저장 및 Knowledge에 반영되었습니다.',
         githubUrl: rawUrl
       })
     };
