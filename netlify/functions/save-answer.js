@@ -36,59 +36,55 @@ exports.handler = async (event) => {
     }
 
     /* ===============================
-       요청 데이터 (화투 인지훈련 전용)
+       요청 데이터 (최종 HTML 기준)
     =============================== */
     const {
       userName,
-      cards,          // [{ m, n, s }]
-      answers,        // { mem, calc, class }
-      sum,            // 월 합
-      season,         // 정답 계절
+      cards,        // [{id,n,img}]
+      recall,       // 기억 맞힌 개수 (0~3)
+      wordScore,    // 낱말 퀴즈 점수 (0~5)
+      healthScore,  // 치매예방 상식 점수 (0~5)
       timestamp
     } = JSON.parse(event.body);
 
-    if (!userName || !cards || !answers) {
+    if (!userName || !cards || !timestamp) {
       throw new Error('요청 데이터가 올바르지 않습니다.');
     }
-
-    /* ===============================
-       결과 판정
-    =============================== */
-    const memoryCorrect = answers.mem === cards[0].n;
-    const calcCorrect   = Number(answers.calc) === Number(sum);
-    const classCorrect  = answers.class === season;
 
     /* ===============================
        Knowledge 문서 (아바타 최적화)
     =============================== */
     const fileContent = `
-[${new Date(timestamp).toLocaleDateString('ko-KR')} 화투 인지훈련 기록]
+[오늘의 두뇌 활동 기록]
 
 이름: ${userName}
+날짜: ${new Date(timestamp).toLocaleString('ko-KR')}
 
-오늘의 화투 카드:
-${cards.map(c => `- ${c.m}월 ${c.n} (${c.s})`).join('\n')}
+화투 기억 미션:
+- 선택한 카드: ${cards.map(c => c.n).join(', ')}
+- 다시 맞힌 카드 수: ${recall} / 3
 
-인지훈련 결과 요약:
-- 기억 훈련: ${memoryCorrect ? '첫 번째 화투패를 정확히 기억함' : '첫 번째 화투패 기억에 어려움이 있었음'}
-- 계산 훈련: ${calcCorrect ? `월의 합 ${sum}을 정확히 계산함` : '월의 합 계산에서 혼동이 있었음'}
-- 분류 훈련: ${classCorrect ? `${season} 계절로 올바르게 분류함` : '계절 분류에서 혼동이 있었음'}
+문해력 활동 (낱말 퀴즈):
+- 점수: ${wordScore} / 5
+
+치매 예방 상식 퀴즈:
+- 점수: ${healthScore} / 5
 
 종합 평가:
-화투 이미지를 활용한 기억, 계산, 분류 인지 자극 활동을 수행함.
-천천히 문제를 해결하려는 태도가 관찰되었으며,
-일상적인 놀이 기반 인지 훈련으로 활용 가능함.
+화투를 활용한 기억 훈련과 낱말 중심의 언어 자극 활동을 수행함.
+놀이 형태의 인지 활동을 통해 기억력과 언어 기능을 고르게 사용함.
+일상적인 치매 예방 루틴으로 적절한 수준의 인지 자극이 이루어짐.
 `.trim();
 
     /* ===============================
-       파일명 (ASCII만)
+       파일명 (ASCII만 사용)
     =============================== */
-    const fileName = `hwatu_${Date.now()}.txt`;
+    const fileName = `cognitive_${Date.now()}.txt`;
     const fileContentBase64 =
       Buffer.from(fileContent, 'utf-8').toString('base64');
 
     /* ===============================
-       GitHub 업로드
+       GitHub 파일 저장
     =============================== */
     const githubApiUrl =
       `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${fileName}`;
@@ -101,7 +97,7 @@ ${cards.map(c => `- ${c.m}월 ${c.n} (${c.s})`).join('\n')}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: `Add hwatu cognitive result (${userName})`,
+        message: `Add cognitive activity result (${userName})`,
         content: fileContentBase64,
         branch: GITHUB_BRANCH
       })
@@ -143,7 +139,7 @@ ${cards.map(c => `- ${c.m}월 ${c.n} (${c.s})`).join('\n')}
           body: JSON.stringify({
             documentType: 'text',
             source_url: rawUrl,
-            title: `${userName}_화투_인지훈련_기록`
+            title: `${userName}_두뇌활동_기록`
           })
         }
       );
@@ -166,14 +162,14 @@ ${cards.map(c => `- ${c.m}월 ${c.n} (${c.s})`).join('\n')}
     }
 
     /* ===============================
-       성공
+       성공 응답
     =============================== */
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
         success: true,
-        message: '화투 인지훈련 결과가 저장 및 Knowledge에 반영되었습니다.',
+        message: '두뇌 활동 결과가 저장되었습니다.',
         githubUrl: rawUrl
       })
     };
