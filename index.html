@@ -1,323 +1,921 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<title>오늘의 두뇌 활동</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>오늘의 두뇌 활동</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body{
+      font-family:'Malgun Gothic', sans-serif;
+      background:linear-gradient(135deg,#667eea 0%, #764ba2 100%);
+      min-height:100vh;
+      padding:20px;
+    }
+    .container{ max-width:900px; margin:0 auto; }
+    h1{
+      text-align:center;
+      color:white;
+      font-size:2.4em;
+      margin:10px 0 22px;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.25);
+      letter-spacing:0.5px;
+    }
 
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:'Malgun Gothic',sans-serif;
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  min-height:100vh;padding:20px
-}
-.container{max-width:900px;margin:0 auto}
-h1{text-align:center;color:white;margin-bottom:20px}
+    .card{
+      background:white;
+      padding:24px;
+      border-radius:18px;
+      margin-bottom:18px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.18);
+    }
+    .title{ font-size:1.5em; margin-bottom:10px; color:#222; }
+    .desc{ color:#444; line-height:1.8; font-size:1.05em; }
 
-.card{
-  background:white;border-radius:18px;
-  padding:24px;margin-bottom:20px;
-  box-shadow:0 10px 30px rgba(0,0,0,.2)
-}
-.title{font-size:1.4em;margin-bottom:10px}
-.desc{color:#444;line-height:1.6}
+    .input{
+      margin-top:12px;
+      width:100%;
+      padding:14px;
+      font-size:1.1em;
+      border:2px solid #d4d7dd;
+      border-radius:12px;
+      outline:none;
+    }
+    .input:focus{ border-color:#667eea; }
 
-input{
-  width:100%;padding:14px;font-size:1.1em;
-  border-radius:10px;border:2px solid #ccc;margin-top:10px
-}
+    .btn{
+      width:100%;
+      padding:16px;
+      border:none;
+      border-radius:12px;
+      background:linear-gradient(135deg,#667eea,#764ba2);
+      color:white;
+      font-size:1.2em;
+      cursor:pointer;
+      margin-top:14px;
+      transition:transform 0.15s ease;
+    }
+    .btn:hover{ transform:scale(1.01); }
+    .btn.secondary{
+      background:#eef1f6;
+      color:#333;
+      border:2px solid #d4d7dd;
+    }
+    .btn:disabled{
+      background:#c9c9c9;
+      cursor:not-allowed;
+      transform:none;
+    }
 
-.btn{
-  width:100%;padding:16px;
-  background:linear-gradient(135deg,#667eea,#764ba2);
-  color:white;border:none;border-radius:12px;
-  font-size:1.2em;cursor:pointer;
-  margin-top:20px
-}
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:18px;
+      justify-items:center;
+      margin-top:14px;
+    }
 
-.grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:18px;
-  justify-items:center;
-  margin-top:15px
-}
+    /* Flip card */
+    .flip-card{
+      width:122px;
+      height:188px;
+      perspective:1000px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .flip-inner{
+      width:100%;
+      height:100%;
+      position:relative;
+      transform-style:preserve-3d;
+      transition:transform 0.55s ease;
+    }
+    .flip-card.flipped .flip-inner{ transform:rotateY(180deg); }
+    .face{
+      position:absolute;
+      width:100%;
+      height:100%;
+      backface-visibility:hidden;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,0.12);
+    }
+    .face img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .front{ transform:rotateY(180deg); }
 
-/* 카드 뒤집기 */
-.flip-card{
-  width:120px;height:190px;
-  perspective:1000px;cursor:pointer
-}
-.flip-inner{
-  width:100%;height:100%;
-  transition:transform .6s;
-  transform-style:preserve-3d;
-  position:relative
-}
-.flip-card.flipped .flip-inner{
-  transform:rotateY(180deg)
-}
-.flip-face{
-  position:absolute;width:100%;height:100%;
-  backface-visibility:hidden;border-radius:14px
-}
-.flip-front{transform:rotateY(180deg)}
-.flip-face img{
-  width:100%;height:100%;border-radius:14px
-}
+    .picked-outline{ outline:4px solid #667eea; border-radius:16px; }
+    .muted{ opacity:0.55; }
 
-.selected{
-  outline:4px solid #667eea
-}
+    .img-row{
+      display:flex;
+      gap:16px;
+      justify-content:center;
+      align-items:center;
+      margin-top:14px;
+      flex-wrap:wrap;
+    }
+    .img-row img{
+      width:122px;
+      height:188px;
+      border-radius:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.12);
+      object-fit:cover;
+    }
 
-.option{
-  padding:14px;border-radius:12px;
-  border:2px solid #ddd;
-  margin-top:10px;cursor:pointer
-}
-.option.selected{
-  background:#667eea;color:white;border-color:#667eea
-}
+    /* Options */
+    .q-title{ font-size:1.18em; color:#222; margin-bottom:10px; line-height:1.6; }
+    .options{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+    .option{
+      padding:14px 14px;
+      border-radius:12px;
+      border:2px solid #e1e4ea;
+      background:#fafbfc;
+      cursor:pointer;
+      transition:all 0.15s ease;
+      font-size:1.08em;
+      color:#222;
+      user-select:none;
+    }
+    .option:hover{ border-color:#667eea; background:#eef4ff; }
+    .option.selected{
+      background:#667eea;
+      color:white;
+      border-color:#667eea;
+    }
+    .option.correct{
+      background:#28a745;
+      border-color:#28a745;
+      color:white;
+    }
+    .option.wrong{
+      background:#dc3545;
+      border-color:#dc3545;
+      color:white;
+    }
 
-@media(max-width:600px){
-  .grid{grid-template-columns:repeat(3,1fr)}
-  .flip-card{width:100px;height:160px}
-}
-</style>
+    .pill{
+      display:inline-block;
+      padding:6px 12px;
+      background:#eef4ff;
+      border:1px solid #d6e4ff;
+      color:#2457d6;
+      border-radius:999px;
+      font-weight:700;
+      font-size:0.95em;
+      margin-bottom:10px;
+    }
+
+    .status{
+      margin-top:14px;
+      padding:12px;
+      border-radius:12px;
+      display:none;
+      font-size:1.05em;
+      line-height:1.6;
+    }
+    .status.show{ display:block; }
+    .status.success{ background:#d4edda; color:#155724; border:2px solid #28a745; }
+    .status.error{ background:#f8d7da; color:#721c24; border:2px solid #dc3545; }
+
+    @media (max-width: 600px){
+      .grid{ grid-template-columns:repeat(3, 1fr); gap:14px; }
+      .flip-card{ width:104px; height:160px; }
+      .img-row img{ width:104px; height:160px; }
+      h1{ font-size:2.0em; }
+    }
+  </style>
 </head>
-
 <body>
-<div class="container">
-<h1>🧠 오늘의 두뇌 활동</h1>
-<div id="app"></div>
-</div>
+  <div class="container">
+    <h1>🧠 오늘의 두뇌 활동</h1>
+    <div id="app"></div>
+  </div>
 
-<!-- D-ID 아바타 -->
-<script type="module"
-  src="https://agent.d-id.com/v2/index.js"
-  data-mode="fabio"
-  data-client-key="Z29vZ2xlLW9hdXRoMnwxMTI3NjQ3MzA0NTM3NjA0MTgyMTI6d01EN0x6bFFFMmlZSk9nUHNacXll"
-  data-agent-id="v2_agt_adow2aMU"
-  data-name="did-agent"
-  data-monitor="true"
-  data-position="right">
-</script>
+  <!-- D-ID 아바타 (사용자 제공 값 반영) -->
+  <script type="module"
+    src="https://agent.d-id.com/v2/index.js"
+    data-mode="fabio"
+    data-client-key="Z29vZ2xlLW9hdXRoMnwxMTI3NjQ3MzA0NTM3NjA0MTgyMTI6d01EN0x6bFFFMmlZSk9nUHNacXll"
+    data-agent-id="v2_agt_adow2aMU"
+    data-name="did-agent"
+    data-monitor="true"
+    data-orientation="horizontal"
+    data-position="right">
+  </script>
 
-<script>
-const app=document.getElementById('app');
-let userName='';
+  <script>
+    /* =========================
+      설정: 이미지 경로
+    ========================= */
+    const IMG_BASE = "/hwatu";
+    const BACK_IMG = `${IMG_BASE}/back.png`;
 
-/* 화투 카드 */
-const deck=[
- {id:1,img:'/hwatu/01_pine.png'},
- {id:2,img:'/hwatu/02_plum.png'},
- {id:3,img:'/hwatu/03_cherry.png'},
- {id:4,img:'/hwatu/04_wisteria.png'},
- {id:5,img:'/hwatu/05_iris.png'},
- {id:6,img:'/hwatu/06_peony.png'},
- {id:7,img:'/hwatu/07_bushclover.png'},
- {id:8,img:'/hwatu/08_grass.png'},
- {id:9,img:'/hwatu/09_chrysanthemum.png'},
- {id:10,img:'/hwatu/10_maple.png'},
- {id:11,img:'/hwatu/11_paulownia.png'},
- {id:12,img:'/hwatu/12_rain.png'}
-];
+    const deck = [
+      { id: 1, key:"01_pine", img: `${IMG_BASE}/01_pine.png`, label:"소나무" },
+      { id: 2, key:"02_plum", img: `${IMG_BASE}/02_plum.png`, label:"매화" },
+      { id: 3, key:"03_cherry", img: `${IMG_BASE}/03_cherry.png`, label:"벚꽃" },
+      { id: 4, key:"04_wisteria", img: `${IMG_BASE}/04_wisteria.png`, label:"등나무" },
+      { id: 5, key:"05_iris", img: `${IMG_BASE}/05_iris.png`, label:"창포" },
+      { id: 6, key:"06_peony", img: `${IMG_BASE}/06_peony.png`, label:"모란" },
+      { id: 7, key:"07_bushclover", img: `${IMG_BASE}/07_bushclover.png`, label:"싸리" },
+      { id: 8, key:"08_grass", img: `${IMG_BASE}/08_grass.png`, label:"억새" },
+      { id: 9, key:"09_chrysanthemum", img: `${IMG_BASE}/09_chrysanthemum.png`, label:"국화" },
+      { id:10, key:"10_maple", img: `${IMG_BASE}/10_maple.png`, label:"단풍" },
+      { id:11, key:"11_paulownia", img: `${IMG_BASE}/11_paulownia.png`, label:"오동" },
+      { id:12, key:"12_rain", img: `${IMG_BASE}/12_rain.png`, label:"비(우산)" },
+    ];
 
-let shuffled=[], selected=[], recallCorrect=0;
-let wordScore=0, healthScore=0;
+    /* =========================
+      낱말 퀴즈 (5문항)
+      - 어르신이 “모를만한 단어” + 쉬운 설명
+    ========================= */
+    const wordQuizData = [
+      {
+        question: "‘시나브로’는 어떤 뜻일까요?",
+        options: ["모르는 사이에 조금씩", "갑자기 한 번에", "큰 소리로", "거꾸로"],
+        correct: 0,
+        explanation: "‘시나브로’는 ‘모르는 사이에 조금씩’이라는 뜻이에요."
+      },
+      {
+        question: "‘기별’은 어떤 뜻일까요?",
+        options: ["소식", "약속", "정리", "비밀"],
+        correct: 0,
+        explanation: "‘기별’은 ‘소식’이라는 뜻이에요. (예: 기별이 없다 = 소식이 없다)"
+      },
+      {
+        question: "‘어수선하다’는 어떤 상태일까요?",
+        options: ["정돈되어 있다", "어지럽고 정리가 안 되어 있다", "조용하고 차분하다", "단단하고 튼튼하다"],
+        correct: 1,
+        explanation: "‘어수선하다’는 ‘어지럽고 정리가 안 된 상태’를 말해요."
+      },
+      {
+        question: "‘뿌듯하다’는 어떤 마음일까요?",
+        options: ["불안하고 걱정된다", "속상하고 슬프다", "해내서 마음이 든든하고 만족스럽다", "무섭고 떨린다"],
+        correct: 2,
+        explanation: "‘뿌듯하다’는 ‘해내서 마음이 든든하고 만족스러운 상태’예요."
+      },
+      {
+        question: "‘은근히’는 어떤 느낌일까요?",
+        options: ["조용히 슬며시", "매우 크게", "갑자기 확", "대충 빨리"],
+        correct: 0,
+        explanation: "‘은근히’는 ‘조용히 슬며시, 눈에 띄지 않게’라는 뜻이에요."
+      },
+    ];
 
-/* ===== 시작 화면 ===== */
-function intro(){
-  app.innerHTML=`
-  <div class="card">
-    <div class="title">오늘의 두뇌 활동에 오셨어요</div>
-    <div class="desc">
-      이 시간은 머리를 시험하는 시간이 아닙니다.<br>
-      카드와 단어를 보며 머리를 살짝 깨워보는 시간이에요.<br><br>
-      잘하고 못하고는 전혀 중요하지 않습니다.<br>
-      천천히, 편한 마음으로 해보시면 됩니다.
-    </div>
-    <input id="nameInput" placeholder="이름을 입력해주세요">
-    <button class="btn" onclick="start()">시작하기</button>
-  </div>`;
-}
+    /* =========================
+      치매 예방 퀴즈 (5문항 + 해설)
+    ========================= */
+    const dementiaQuizData = [
+      {
+        question: "다음 중 치매 예방에 가장 효과적인 활동은 무엇일까요?",
+        options: ["하루 종일 TV 시청하기", "규칙적인 운동과 두뇌 활동", "혼자서 집에만 있기", "같은 음식만 먹기"],
+        correct: 1,
+        explanation: "규칙적인 운동은 뇌 혈류를 늘리고, 두뇌 활동은 신경 연결을 도와 치매 예방에 좋아요."
+      },
+      {
+        question: "기억력 향상에 도움이 되는 식품이 ‘아닌 것’은?",
+        options: ["등푸른 생선(고등어·연어)", "호두·아몬드 등 견과류", "시금치·브로콜리 등 녹색 채소", "가공식품과 패스트푸드"],
+        correct: 3,
+        explanation: "가공식품·패스트푸드는 염분·당분이 많아 뇌 건강에 좋지 않을 수 있어요."
+      },
+      {
+        question: "치매 초기 증상으로 더 흔한 것은?",
+        options: ["최근 일을 자주 잊어버린다", "옛날 일을 기억하지 못한다", "모든 것을 완벽하게 기억한다", "잠을 많이 자면 바로 치매다"],
+        correct: 0,
+        explanation: "치매 초기에는 ‘최근 기억(단기 기억)’이 먼저 흔들리는 경우가 많아요."
+      },
+      {
+        question: "두뇌 건강을 위한 수면 시간으로 적당한 것은?",
+        options: ["3~4시간", "5~6시간", "7~8시간", "10시간 이상만 자야 한다"],
+        correct: 2,
+        explanation: "수면은 기억 정리와 뇌 회복에 중요해요. 보통 7~8시간이 권장돼요."
+      },
+      {
+        question: "사회적 활동이 치매 예방에 도움이 되는 이유로 더 맞는 것은?",
+        options: ["뇌를 다양하게 자극하기 때문에", "돈을 벌 수 있어서", "무조건 운동량이 늘어서", "식사를 많이 해서"],
+        correct: 0,
+        explanation: "대화·감정 교류·문제 해결 등 다양한 뇌 기능을 사용하게 되어 인지 기능 유지에 도움이 돼요."
+      }
+    ];
 
-/* ===== 카드 선택 ===== */
-function start(){
-  userName=document.getElementById('nameInput').value.trim();
-  if(!userName){alert('이름을 입력해주세요');return;}
+    /* =========================
+      상태/세션
+    ========================= */
+    const app = document.getElementById("app");
 
-  selected=[];
-  shuffled=[...deck].sort(()=>Math.random()-0.5);
+    const state = {
+      userName: "",
+      sessionId: "",
+      startISO: "",
+      endISO: "",
 
-  app.innerHTML=`
-  <div class="card">
-    <div class="title">오늘의 화투 카드</div>
-    <div class="desc">마음에 드는 카드 세 장을 골라주세요.</div>
-    <div class="grid">
-      ${shuffled.map((c,i)=>`
-        <div class="flip-card" onclick="pick(${i},this)">
-          <div class="flip-inner">
-            <div class="flip-face">
-              <img src="/hwatu/back.png">
+      hwatu: {
+        deckOrder: [],
+        picked: [],
+        memoryShownMs: 5000,
+        memoryStartAt: 0,
+        recallStartAt: 0,
+        recallPicked: [],
+        recallCorrect: 0
+      },
+
+      word: {
+        answers: Array(wordQuizData.length).fill(null),
+        results: [],
+        score: 0
+      },
+
+      dementia: {
+        answers: Array(dementiaQuizData.length).fill(null),
+        results: [],
+        score: 0
+      }
+    };
+
+    function nowISO(){ return new Date().toISOString(); }
+    function newSessionId(){
+      // YYYYMMDD_HHMMSS
+      const d = new Date();
+      const pad = n => String(n).padStart(2,"0");
+      return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+    function shuffle(arr){
+      const a = [...arr];
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    /* =========================
+      화면 렌더
+    ========================= */
+    function renderIntro(){
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">오늘의 두뇌 활동에 오셨어요</div>
+          <div class="desc">
+            이 시간은 머리를 <b>시험</b>하는 시간이 아닙니다.<br>
+            카드와 단어를 보며 머리를 <b>살짝 깨워보는 시간</b>이에요.<br><br>
+            잘하고 못하고는 전혀 중요하지 않습니다.<br>
+            천천히, 편한 마음으로 해보시면 됩니다.
+          </div>
+
+          <input class="input" id="nameInput" placeholder="이름을 입력해주세요" />
+          <button class="btn" id="startBtn">시작하기</button>
+        </div>
+      `;
+
+      document.getElementById("startBtn").onclick = () => {
+        const name = document.getElementById("nameInput").value.trim();
+        if(!name){ alert("이름을 입력해주세요."); return; }
+        state.userName = name;
+        state.sessionId = newSessionId();
+        state.startISO = nowISO();
+
+        // reset module states
+        state.hwatu.picked = [];
+        state.hwatu.recallPicked = [];
+        state.hwatu.recallCorrect = 0;
+        state.word.answers = Array(wordQuizData.length).fill(null);
+        state.word.results = [];
+        state.word.score = 0;
+        state.dementia.answers = Array(dementiaQuizData.length).fill(null);
+        state.dementia.results = [];
+        state.dementia.score = 0;
+
+        renderHwatuPick();
+      };
+    }
+
+    /* =========================
+      1) 화투: 12장 뒷면 → 3장 선택(중복 방지) + 뒤집기
+    ========================= */
+    function renderHwatuPick(){
+      const shuffledDeck = shuffle(deck);
+      state.hwatu.deckOrder = shuffledDeck.map(x=>x.key);
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">오늘의 화투 운세 & 기억 훈련</div>
+          <div class="desc">
+            마음에 드는 카드 <b>세 장</b>을 골라주세요.<br>
+            고르는 동안 자연스럽게 머리를 쓰게 됩니다.
+          </div>
+
+          <div class="grid" id="hwatuGrid">
+            ${shuffledDeck.map((c, idx) => `
+              <div class="flip-card" data-idx="${idx}">
+                <div class="flip-inner">
+                  <div class="face back">
+                    <img src="${BACK_IMG}" alt="back">
+                  </div>
+                  <div class="face front">
+                    <img src="${c.img}" alt="${escapeHtml(c.label)}">
+                  </div>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="desc" style="margin-top:10px; color:#666;">
+            선택: <b><span id="pickedCount">0</span>/3</b>
+          </div>
+        </div>
+      `;
+
+      const grid = document.getElementById("hwatuGrid");
+      const pickedCount = document.getElementById("pickedCount");
+
+      grid.querySelectorAll(".flip-card").forEach(cardEl=>{
+        cardEl.onclick = () => {
+          const idx = Number(cardEl.dataset.idx);
+          const card = shuffledDeck[idx];
+
+          // 중복 방지
+          if(state.hwatu.picked.some(x=>x.id===card.id)) return;
+          if(state.hwatu.picked.length >= 3) return;
+
+          state.hwatu.picked.push(card);
+          cardEl.classList.add("flipped","picked-outline");
+          pickedCount.textContent = String(state.hwatu.picked.length);
+
+          if(state.hwatu.picked.length === 3){
+            // 클릭 잠금
+            grid.querySelectorAll(".flip-card").forEach(el=>el.style.pointerEvents="none");
+            setTimeout(renderHwatuMemory, 700);
+          }
+        };
+      });
+    }
+
+    /* =========================
+      2) 화투: 기억(5초)
+    ========================= */
+    function renderHwatuMemory(){
+      state.hwatu.memoryStartAt = performance.now();
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">카드를 한 번 살펴볼게요</div>
+          <div class="desc">
+            방금 고른 카드 세 장입니다.<br>
+            잠시 눈으로만 천천히 봐주세요.<br><br>
+            조금 있다가 이 카드들을 <b>다시 골라보는 시간</b>이 있어요.
+          </div>
+
+          <div class="img-row">
+            ${state.hwatu.picked.map(c=>`
+              <img src="${c.img}" alt="${escapeHtml(c.label)}">
+            `).join("")}
+          </div>
+
+          <div class="desc" style="margin-top:12px; color:#666;">
+            (약 ${Math.round(state.hwatu.memoryShownMs/1000)}초 후 다음 단계로 넘어갑니다.)
+          </div>
+        </div>
+      `;
+
+      setTimeout(()=>{
+        renderHwatuRecall();
+      }, state.hwatu.memoryShownMs);
+    }
+
+    /* =========================
+      3) 화투: 회상(앞면 12장 랜덤 배치) → 방금 뽑은 3장 다시 클릭
+    ========================= */
+    function renderHwatuRecall(){
+      state.hwatu.recallStartAt = performance.now();
+      state.hwatu.recallPicked = [];
+      state.hwatu.recallCorrect = 0;
+
+      const shuffledDeck = shuffle(deck);
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">아까 본 카드, 기억나시나요?</div>
+          <div class="desc">
+            아래 카드들 중에서<br>
+            아까 보았던 카드 <b>세 장</b>을 다시 한 번 골라주세요.<br><br>
+            완벽하지 않아도 괜찮습니다.<br>
+            생각해보는 것만으로도 머리는 이미 일을 하고 있습니다.
+          </div>
+
+          <div class="grid" id="recallGrid">
+            ${shuffledDeck.map((c, idx)=>`
+              <div class="flip-card picked-outline" style="outline:none; box-shadow:none; cursor:pointer;" data-idx="${idx}">
+                <div class="face" style="position:relative; width:122px; height:188px; border-radius:14px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,0.12);">
+                  <img src="${c.img}" alt="${escapeHtml(c.label)}">
+                </div>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="desc" style="margin-top:10px; color:#666;">
+            선택: <b><span id="recallCount">0</span>/3</b>
+          </div>
+        </div>
+      `;
+
+      const grid = document.getElementById("recallGrid");
+      const recallCount = document.getElementById("recallCount");
+
+      grid.querySelectorAll("[data-idx]").forEach(el=>{
+        el.onclick = () => {
+          const idx = Number(el.dataset.idx);
+          const card = shuffledDeck[idx];
+
+          if(state.hwatu.recallPicked.some(x=>x.id===card.id)) return;
+          if(state.hwatu.recallPicked.length >= 3) return;
+
+          state.hwatu.recallPicked.push(card);
+          el.classList.add("picked-outline");
+          recallCount.textContent = String(state.hwatu.recallPicked.length);
+
+          if(state.hwatu.recallPicked.length === 3){
+            // 정확도 계산
+            const pickedIds = new Set(state.hwatu.picked.map(x=>x.id));
+            state.hwatu.recallCorrect = state.hwatu.recallPicked.filter(x=>pickedIds.has(x.id)).length;
+
+            // 클릭 잠금
+            grid.querySelectorAll("[data-idx]").forEach(n=>n.style.pointerEvents="none");
+
+            setTimeout(renderFortuneMessage, 600);
+          }
+        };
+      });
+    }
+
+    /* =========================
+      4) 행운 메시지 + 다음 활동 권장 (회상 결과에 따라)
+    ========================= */
+    function renderFortuneMessage(){
+      const c = state.hwatu.recallCorrect;
+      let msg = "";
+      let title = "오늘의 행운 메시지";
+
+      if(c === 3){
+        title = "🌟 오늘 기억력이 참 또렷했어요";
+        msg = `
+          아까 보았던 카드를 <b>차분하게 잘 떠올리셨어요</b>.<br>
+          집중하면서 생각하신 모습이 참 좋았습니다.<br><br>
+          이런 시간들이 쌓이면 머리도 점점 더 또렷해집니다.<br>
+          이제 말을 떠올려보는 활동으로 <b>머리를 한 번 더 가볍게</b> 움직여볼까요?
+        `;
+      }else if(c > 0){
+        title = "🌱 천천히 잘 해내고 계세요";
+        msg = `
+          카드를 떠올리려고 <b>천천히 생각하신 게 참 좋았어요</b>.<br><br>
+          기억은 바로 떠오르지 않아도 괜찮습니다.<br>
+          이렇게 한 번씩 생각해보는 것만으로도 머리는 <b>충분히 일을 하고 있어요</b>.<br><br>
+          이제 단어를 생각해보는 활동으로 자연스럽게 이어가볼게요.
+        `;
+      }else{
+        title = "😊 괜찮아요, 지금이 연습이에요";
+        msg = `
+          기억이 바로 떠오르지 않아도 <b>전혀 괜찮습니다</b>.<br><br>
+          머리는 억지로 쓰기보다는 천천히 자주 써주는 게 더 좋아요.<br>
+          지금처럼 편한 마음으로 이어가는 게 중요합니다.<br><br>
+          이번에는 단어를 골라보는 활동을 <b>부담 없이</b> 해볼게요.
+        `;
+      }
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">${title}</div>
+          <div class="desc">${msg}</div>
+          <button class="btn" id="toWordBtn">낱말 활동으로 가볼까요?</button>
+        </div>
+      `;
+
+      document.getElementById("toWordBtn").onclick = () => renderWordQuiz(0);
+    }
+
+    /* =========================
+      5) 낱말 퀴즈 (단일선택, 5문항)
+    ========================= */
+    function renderWordQuiz(index){
+      const total = wordQuizData.length;
+
+      // 완료 시 치매예방 퀴즈로
+      if(index >= total){
+        computeWordResults();
+        renderDementiaQuiz(0);
+        return;
+      }
+
+      const q = wordQuizData[index];
+      const picked = state.word.answers[index];
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="pill">낱말 퀴즈 ${index+1} / ${total}</div>
+          <div class="title">단어를 한 번 생각해볼까요?</div>
+          <div class="desc">
+            단어 뜻을 떠올리는 시간입니다.<br>
+            정답을 맞히려고 애쓰지 않아도 괜찮아요.<br>
+            가장 맞는 것 같다고 느껴지는 걸 골라주세요.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="q-title">${escapeHtml(q.question)}</div>
+          <div class="options" id="wordOpts">
+            ${q.options.map((opt, i)=>`
+              <div class="option ${picked===i ? "selected":""}" data-i="${i}">
+                ${escapeHtml(opt)}
+              </div>
+            `).join("")}
+          </div>
+
+          <button class="btn" id="wordNextBtn" ${picked===null ? "disabled":""}>
+            ${index === total-1 ? "다음(치매 예방 퀴즈로)" : "다음"}
+          </button>
+        </div>
+      `;
+
+      const opts = document.getElementById("wordOpts");
+      const btn = document.getElementById("wordNextBtn");
+
+      opts.querySelectorAll(".option").forEach(el=>{
+        el.onclick = () => {
+          const i = Number(el.dataset.i);
+          state.word.answers[index] = i;
+          opts.querySelectorAll(".option").forEach(x=>x.classList.remove("selected"));
+          el.classList.add("selected");
+          btn.disabled = false;
+        };
+      });
+
+      btn.onclick = () => renderWordQuiz(index+1);
+    }
+
+    function computeWordResults(){
+      const results = [];
+      let score = 0;
+
+      wordQuizData.forEach((q, idx)=>{
+        const ua = state.word.answers[idx];
+        const isCorrect = ua === q.correct;
+        if(isCorrect) score++;
+
+        results.push({
+          question: q.question,
+          options: q.options,
+          userAnswerIndex: ua,
+          userAnswer: ua !== null ? q.options[ua] : "(미응답)",
+          correctIndex: q.correct,
+          correctAnswer: q.options[q.correct],
+          isCorrect,
+          explanation: q.explanation
+        });
+      });
+
+      state.word.results = results;
+      state.word.score = score;
+    }
+
+    /* =========================
+      6) 치매 예방 퀴즈 (단일선택, 5문항) + 끝나면 결과/해설 표시
+    ========================= */
+    function renderDementiaQuiz(index){
+      const total = dementiaQuizData.length;
+
+      if(index >= total){
+        computeDementiaResults();
+        renderDementiaReview();
+        return;
+      }
+
+      const q = dementiaQuizData[index];
+      const picked = state.dementia.answers[index];
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="pill">치매 예방 퀴즈 ${index+1} / ${total}</div>
+          <div class="title">머리에 좋은 이야기 한 번 살펴볼까요?</div>
+          <div class="desc">
+            지금부터는 머리를 건강하게 쓰는 데 도움이 되는 생활 이야기입니다.<br>
+            모두 맞히려고 하지 않아도 괜찮아요.<br>
+            가장 맞는 것 같다고 느껴지는 걸 골라주세요.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="q-title">${escapeHtml(q.question)}</div>
+          <div class="options" id="demOpts">
+            ${q.options.map((opt, i)=>`
+              <div class="option ${picked===i ? "selected":""}" data-i="${i}">
+                ${escapeHtml(opt)}
+              </div>
+            `).join("")}
+          </div>
+
+          <button class="btn" id="demNextBtn" ${picked===null ? "disabled":""}>
+            ${index === total-1 ? "제출하고 해설 보기" : "다음"}
+          </button>
+        </div>
+      `;
+
+      const opts = document.getElementById("demOpts");
+      const btn = document.getElementById("demNextBtn");
+
+      opts.querySelectorAll(".option").forEach(el=>{
+        el.onclick = () => {
+          const i = Number(el.dataset.i);
+          state.dementia.answers[index] = i;
+          opts.querySelectorAll(".option").forEach(x=>x.classList.remove("selected"));
+          el.classList.add("selected");
+          btn.disabled = false;
+        };
+      });
+
+      btn.onclick = () => renderDementiaQuiz(index+1);
+    }
+
+    function computeDementiaResults(){
+      const results = [];
+      let score = 0;
+
+      dementiaQuizData.forEach((q, idx)=>{
+        const ua = state.dementia.answers[idx];
+        const isCorrect = ua === q.correct;
+        if(isCorrect) score++;
+
+        results.push({
+          question: q.question,
+          options: q.options,
+          userAnswerIndex: ua,
+          userAnswer: ua !== null ? q.options[ua] : "(미응답)",
+          correctIndex: q.correct,
+          correctAnswer: q.options[q.correct],
+          isCorrect,
+          explanation: q.explanation
+        });
+      });
+
+      state.dementia.results = results;
+      state.dementia.score = score;
+    }
+
+    function renderDementiaReview(){
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">해설을 함께 볼까요?</div>
+          <div class="desc">
+            정답을 맞히는 것도 좋지만,<br>
+            <b>해설을 읽어보는 것</b> 자체가 두뇌 활동이 됩니다.
+          </div>
+        </div>
+
+        ${state.dementia.results.map((r, idx)=>`
+          <div class="card" id="r-${idx}">
+            <div class="pill">문제 ${idx+1}</div>
+            <div class="q-title">${escapeHtml(r.question)}</div>
+            <div class="options">
+              ${r.options.map((opt, i)=>{
+                const cls =
+                  (i === r.userAnswerIndex && i === r.correctIndex) ? "option correct" :
+                  (i === r.userAnswerIndex && i !== r.correctIndex) ? "option wrong" :
+                  (i === r.correctIndex) ? "option correct" : "option";
+                return `<div class="${cls}">${escapeHtml(opt)}</div>`;
+              }).join("")}
             </div>
-            <div class="flip-face flip-front">
-              <img src="${c.img}">
+            <div class="desc" style="margin-top:10px;">
+              <b>내가 고른 답:</b> ${escapeHtml(r.userAnswer)}<br>
+              <b>정답:</b> ${escapeHtml(r.correctAnswer)}<br><br>
+              <b>해설:</b> ${escapeHtml(r.explanation)}
             </div>
           </div>
-        </div>`).join('')}
-    </div>
-  </div>`;
-}
+        `).join("")}
 
-function pick(i,el){
-  const card=shuffled[i];
-  if(selected.some(c=>c.id===card.id))return;
-  if(selected.length>=3)return;
-  el.classList.add('flipped','selected');
-  selected.push(card);
-  if(selected.length===3)setTimeout(memory,800);
-}
+        <div class="card">
+          <div class="title">이제 결과를 저장할까요?</div>
+          <div class="desc">
+            오늘 하신 내용이 기록으로 남아야,<br>
+            다음에 다시 했을 때 변화도 비교할 수 있습니다.
+          </div>
+          <button class="btn" id="saveBtn">결과 저장하기</button>
+          <div class="status" id="statusBox"></div>
+        </div>
+      `;
 
-/* ===== 기억 ===== */
-function memory(){
-  app.innerHTML=`
-  <div class="card">
-    <div class="title">카드를 한 번 살펴볼게요</div>
-    <div class="desc">
-      방금 고른 카드 세 장입니다.<br>
-      잠시 눈으로만 천천히 봐주세요.<br><br>
-      조금 있다가 이 카드들을 다시 골라보는 시간이 있어요.
-    </div>
-    <div class="grid">
-      ${selected.map(c=>`<img src="${c.img}" style="width:120px;border-radius:14px">`).join('')}
-    </div>
-  </div>`;
-  setTimeout(recall,5000);
-}
-
-/* ===== 회상 ===== */
-function recall(){
-  recallCorrect=0;
-  shuffled=[...deck].sort(()=>Math.random()-0.5);
-  let picked=[];
-  app.innerHTML=`
-  <div class="card">
-    <div class="title">아까 본 카드, 기억나시나요?</div>
-    <div class="desc">
-      아래 카드들 중에서<br>
-      아까 보았던 카드 세 장을 다시 골라주세요.
-    </div>
-    <div class="grid">
-      ${shuffled.map((c,i)=>`
-        <img src="${c.img}"
-          style="width:120px;border-radius:14px;cursor:pointer"
-          onclick="chooseRecall(${i},this)">`).join('')}
-    </div>
-  </div>`;
-
-  window.chooseRecall=(i,el)=>{
-    const card=shuffled[i];
-    if(picked.some(p=>p.id===card.id))return;
-    if(picked.length>=3)return;
-    el.classList.add('selected');
-    picked.push(card);
-    if(picked.length===3){
-      recallCorrect=picked.filter(p=>selected.some(s=>s.id===p.id)).length;
-      setTimeout(message,800);
+      document.getElementById("saveBtn").onclick = saveAll;
     }
-  }
-}
 
-/* ===== 행운 메시지 ===== */
-function message(){
-  let msg='';
-  if(recallCorrect===3){
-    msg=`오늘 기억력이 참 좋아요.<br>이어서 단어 활동을 해볼까요?`;
-  }else if(recallCorrect>0){
-    msg=`천천히 생각하신 게 참 좋았어요.<br>말을 생각해보는 활동으로 넘어가볼게요.`;
-  }else{
-    msg=`괜찮아요, 연습 중이에요.<br>부담 없이 단어를 골라볼게요.`;
-  }
-  app.innerHTML=`
-  <div class="card">
-    <div class="title">오늘의 행운 메시지</div>
-    <div class="desc">${msg}</div>
-    <button class="btn" onclick="wordQuiz()">다음</button>
-  </div>`;
-}
+    /* =========================
+      7) 저장: 모든 결과를 한 번에 전송 → Netlify Function이 문서 생성/업로드/D-ID 등록
+    ========================= */
+    async function saveAll(){
+      const btn = document.getElementById("saveBtn");
+      const status = document.getElementById("statusBox");
 
-/* ===== 낱말 퀴즈 ===== */
-const words=[
- {q:'마음이 조급하지 않은 상태',o:['여유','긴장','혼란','분주'],c:0},
- {q:'대충 처리하는 태도',o:['성실','꼼꼼','소홀','철저'],c:2},
- {q:'조용히 슬며시',o:['은근히','급히','크게','갑자기'],c:0},
- {q:'해내서 만족스러운 상태',o:['뿌듯','불안','허전','걱정'],c:0},
- {q:'침착하고 조용함',o:['차분','산만','급함','어수선'],c:0}
-];
+      btn.disabled = true;
+      btn.textContent = "⏳ 저장 중...";
 
-function wordQuiz(){
-  wordScore=0;
-  app.innerHTML=`<div class="card"><div class="title">단어를 한 번 생각해볼까요?</div></div>`;
-  words.forEach(w=>{
-    app.innerHTML+=`
-    <div class="card">
-      <div class="desc">${w.q}</div>
-      ${w.o.map((o,i)=>`
-        <div class="option" onclick="this.classList.toggle('selected');if(${i}===${w.c})wordScore++">${o}</div>`).join('')}
-    </div>`;
-  });
-  app.innerHTML+=`<button class="btn" onclick="healthQuiz()">다음</button>`;
-}
+      state.endISO = nowISO();
 
-/* ===== 치매 예방 퀴즈 ===== */
-const health=[
- {q:'치매 예방에 좋은 활동은?',o:['TV','운동+두뇌','혼자','편식'],c:1},
- {q:'기억력에 나쁜 음식은?',o:['생선','견과','채소','패스트푸드'],c:3},
- {q:'치매 초기 증상은?',o:['최근 기억 저하','완벽 기억','과수면','무'],c:0},
- {q:'권장 수면 시간은?',o:['4시간','6시간','7~8시간','10시간'],c:2},
- {q:'사회활동의 효과는?',o:['뇌 자극','돈','식사','운동'],c:0}
-];
+      // 시간 계산(참고용)
+      const memoryElapsedMs = Math.max(0, Math.round(performance.now() - state.hwatu.memoryStartAt));
+      const recallElapsedMs  = Math.max(0, Math.round(performance.now() - state.hwatu.recallStartAt));
 
-function healthQuiz(){
-  healthScore=0;
-  app.innerHTML='';
-  health.forEach(h=>{
-    app.innerHTML+=`
-    <div class="card">
-      <div class="desc">${h.q}</div>
-      ${h.o.map((o,i)=>`
-        <div class="option" onclick="this.classList.toggle('selected');if(${i}===${h.c})healthScore++">${o}</div>`).join('')}
-    </div>`;
-  });
-  app.innerHTML+=`<button class="btn" onclick="save()">결과 저장</button>`;
-}
+      const payload = {
+        userName: state.userName,
+        sessionId: state.sessionId,
+        startedAt: state.startISO,
+        endedAt: state.endISO,
 
-/* ===== 저장 ===== */
-async function save(){
-  await fetch('/.netlify/functions/save-answer',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      userName,
-      recallCorrect,
-      wordScore,
-      healthScore,
-      timestamp:new Date().toISOString()
-    })
-  });
-  app.innerHTML=`
-  <div class="card">
-    <div class="title">오늘도 수고 많으셨어요</div>
-    <div class="desc">
-      오늘 하신 두뇌 활동이 잘 저장되었습니다.<br>
-      내일 또 생각나면 한 번 더 해보셔도 좋아요.
-    </div>
-  </div>`;
-}
+        hwatu: {
+          deckOrder: state.hwatu.deckOrder,
+          picked: state.hwatu.picked.map(c=>({ id:c.id, key:c.key, label:c.label })),
+          recallPicked: state.hwatu.recallPicked.map(c=>({ id:c.id, key:c.key, label:c.label })),
+          recallCorrect: state.hwatu.recallCorrect,
+          recallTotal: 3,
+          memoryShownMs: state.hwatu.memoryShownMs,
+          memoryElapsedMs,
+          recallElapsedMs
+        },
 
-intro();
-</script>
+        word: {
+          score: state.word.score,
+          total: wordQuizData.length,
+          results: state.word.results
+        },
+
+        dementia: {
+          score: state.dementia.score,
+          total: dementiaQuizData.length,
+          results: state.dementia.results
+        }
+      };
+
+      try{
+        const res = await fetch("/.netlify/functions/save-answer", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const text = await res.text();
+        let data = {};
+        try{ data = JSON.parse(text); } catch(e){ data = { raw:text }; }
+
+        if(!res.ok){
+          status.className = "status show error";
+          status.innerHTML = `⚠️ 저장 중 오류가 발생했습니다.<br><br>${escapeHtml(data.detail || data.error || data.raw || "알 수 없는 오류")}`;
+          btn.disabled = false;
+          btn.textContent = "결과 저장하기";
+          return;
+        }
+
+        status.className = "status show success";
+        status.innerHTML = `✅ ${escapeHtml(state.userName)}님, 오늘 결과가 저장되었습니다.<br>
+          다음에 다시 해보시면 변화도 함께 볼 수 있어요.<br><br>
+          ${data.githubUrl ? `기록 파일: ${escapeHtml(data.githubUrl)}` : ""}`;
+
+        btn.textContent = "✅ 저장 완료";
+
+        // 저장 완료 화면 + 다시하기
+        setTimeout(()=>renderDone(data.githubUrl), 900);
+
+      }catch(err){
+        status.className = "status show error";
+        status.innerHTML = `⚠️ 저장 요청 중 오류가 발생했습니다.<br><br>${escapeHtml(err.message)}`;
+        btn.disabled = false;
+        btn.textContent = "결과 저장하기";
+      }
+    }
+
+    function renderDone(githubUrl){
+      app.innerHTML = `
+        <div class="card">
+          <div class="title">오늘도 수고 많으셨어요</div>
+          <div class="desc">
+            오늘 하신 두뇌 활동이 <b>기록으로 저장</b>되었습니다.<br><br>
+            이런 활동은 하루에 한 번이면 충분합니다.<br>
+            내일 또 생각나면 한 번 더 해보셔도 좋아요.<br><br>
+            ${githubUrl ? `<span style="color:#666;">(저장 파일: ${escapeHtml(githubUrl)})</span>` : ""}
+          </div>
+          <button class="btn" id="restartBtn">처음 화면으로 돌아가기</button>
+        </div>
+      `;
+      document.getElementById("restartBtn").onclick = () => {
+        // 프로토타입 반복 테스트/비교를 위해 새 세션 시작
+        renderIntro();
+      };
+    }
+
+    // 시작
+    renderIntro();
+  </script>
 </body>
 </html>
